@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Connexion Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Test de connexion directe</h1>
+    <button onclick="testConnection()">Tester la connexion</button>
+    <div id="result"></div>
+    
+    <script>
+        const SUPABASE_URL = 'https://peigptntyyylgjtpnpmn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlaWdwdG50eXl5bGdqdHBucG1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxOTMzNzQsImV4cCI6MjA2Mzc2OTM3NH0.Y-VqcoFNBt2x_hvA_IaIXLS0qNPb4tw5JLKpG_QKBc0';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        async function testConnection() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>Test en cours...</p>';
+            
+            try {
+                // Test 1: Vérifier la connexion
+                const { data: agencies, error } = await supabaseClient
+                    .from('agencies')
+                    .select('*')
+                    .eq('email', 'test@gestionlocative.com');
+                
+                if (error) {
+                    result.innerHTML = `<p style="color:red">Erreur Supabase: ${error.message}</p>`;
+                    return;
+                }
+                
+                if (!agencies || agencies.length === 0) {
+                    result.innerHTML = '<p style="color:orange">Aucune agence trouvée avec cet email</p>';
+                    return;
+                }
+                
+                const agency = agencies[0];
+                result.innerHTML = `
+                    <p style="color:green">✅ Connexion Supabase OK!</p>
+                    <p>Agence trouvée: ${agency.name}</p>
+                    <p>ID: ${agency.id}</p>
+                    <p>Email: ${agency.email}</p>
+                    <hr>
+                    <p>Pour se connecter dans l'app:</p>
+                    <p><strong>Email:</strong> test@gestionlocative.com</p>
+                    <p><strong>Mot de passe:</strong> test123</p>
+                `;
+                
+            } catch (err) {
+                result.innerHTML = `<p style="color:red">Erreur JavaScript: ${err.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html> 

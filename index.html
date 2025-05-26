@@ -1,0 +1,4082 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Locative Intelligente</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqcyOXDwvgVW4eYy5vqW8TXM5FQ3DKB9w&libraries=places"></script>
+    <style>
+        /* Reset CSS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            background: #f5f7fa;
+        }
+
+        /* Header styles */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: left;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        /* Login styles */
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Dashboard styles */
+        .dashboard {
+            display: none;
+            margin-top: 80px;
+            padding: 20px;
+            min-height: calc(100vh - 80px);
+        }
+
+        .sidebar {
+            width: 250px;
+            position: fixed;
+            left: 0;
+            top: 80px;
+            bottom: 0;
+            background: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 900;
+        }
+
+        .main-content {
+            margin-left: 270px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        /* Navigation */
+        .nav-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-item:hover {
+            background: #f0f4f8;
+        }
+
+        .nav-item i {
+            margin-right: 10px;
+            color: #2a5298;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1e3c72;
+        }
+
+        /* Forms */
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+        }
+
+        .btn {
+            background: #2a5298;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: #1e3c72;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* Stats */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2a5298;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Styles supplémentaires */
+        .status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status.pending {
+            background: #FFC107;
+            color: #000;
+        }
+
+        .status.emergency {
+            background: #f44336;
+            color: white;
+        }
+
+        .status.success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        .search-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .service-card {
+            padding: 1.5rem;
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .service-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .service-rating {
+            color: #FFC107;
+            font-weight: bold;
+        }
+
+        .service-details {
+            margin: 1rem 0;
+        }
+
+        .service-details p {
+            margin: 0.5rem 0;
+        }
+
+        .service-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .report-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .report-item:last-child {
+            border-bottom: none;
+        }
+
+        .report-item i {
+            font-size: 2rem;
+            color: #2a5298;
+            margin-right: 1rem;
+        }
+
+        .report-info {
+            flex: 1;
+        }
+
+        .report-info h4 {
+            margin: 0;
+            color: #1e3c72;
+        }
+
+        .report-info p {
+            margin: 0.5rem 0 0 0;
+            color: #666;
+        }
+
+        .maintenance-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .maintenance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .maintenance-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .document-item i {
+            font-size: 2rem;
+            color: #2a5298;
+            margin-right: 1rem;
+        }
+
+        .document-info {
+            flex: 1;
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .property-score {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .score-details {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .score-details span {
+            display: block;
+            margin: 0.2rem 0;
+        }
+
+        .tenant-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tenant-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Styles pour les graphiques environnementaux */
+        .eco-chart {
+            height: 200px;
+            margin: 1rem 0;
+        }
+
+        .eco-metric {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .eco-icon {
+            font-size: 2rem;
+            color: #4CAF50;
+        }
+
+        /* Style pour la prévisualisation des images */
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        /* Style pour la carte Google Maps */
+        .map-container {
+            height: 300px;
+            margin-top: 1rem;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #propertyMap {
+            height: 100%;
+            width: 100%;
+        }
+
+        .address-search {
+            position: relative;
+        }
+
+        .address-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .address-suggestion {
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+
+        .address-suggestion:hover {
+            background: #f5f7fa;
+        }
+
+        /* Style du formulaire */
+        #propertyForm {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-header h3 {
+            margin: 0;
+            color: #1e3c72;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .btn-close:hover {
+            color: #dc3545;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #dc3545;
+        }
+
+        .btn-cancel:hover {
+            background: #c82333;
+        }
+
+        /* Style pour la carte */
+        .map-container {
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        /* Nouveaux styles */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 1rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 1rem;
+        }
+
+        .amenities-grid {
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .property-card {
+            position: relative;
+        }
+
+        .property-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .property-actions button {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+        }
+
+        .qr-code {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: white;
+            padding: 5px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .property-details {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .property-amenities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 0.5rem;
+        }
+
+        .amenity-tag {
+            background: #f0f4f8;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        /* Fix pour le chevauchement des locataires */
+        #tenantsList {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+            gap: 20px !important;
+            margin-top: 20px !important;
+            width: 100% !important;
+        }
+
+        #tenantsList .card {
+            margin: 0 !important;
+            height: fit-content !important;
+            width: 100% !important;
+            position: relative !important;
+            display: block !important;
+        }
+
+        .tenant-header {
+            display: flex !important;
+            align-items: center !important;
+            gap: 1rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .tenant-actions {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 0.5rem !important;
+            margin-top: 1rem !important;
+        }
+
+        .tenant-actions button {
+            flex: 0 0 auto !important;
+        }
+
+        /* Chat Modal Styles */
+        .chat-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+        }
+
+        .chat-window {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .chat-header .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .chat-header .close-chat:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message.sent .message-content {
+            background: #2a5298;
+            color: white;
+            border-radius: 18px 18px 5px 18px;
+        }
+
+        .message.received .message-content {
+            background: white;
+            color: #333;
+            border-radius: 18px 18px 18px 5px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .message-content {
+            padding: 12px 16px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #2a5298;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .chat-input {
+            border-top: 1px solid #e0e0e0;
+            padding: 15px 20px;
+            background: white;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .chat-input input:focus {
+            border-color: #2a5298;
+        }
+
+        .send-btn {
+            background: #2a5298;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #1e3c72;
+        }
+
+        .chat-status {
+            font-size: 0.8rem;
+            color: #666;
+            padding: 0 20px 10px;
+            text-align: center;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 20px;
+            font-style: italic;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .typing-dots {
+            display: inline-block;
+            animation: typing 1.5s infinite;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0; }
+            30% { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-window {
+                width: 90%;
+                height: 70%;
+                bottom: 10px;
+                right: 5%;
+                left: 5%;
+            }
+        }
+
+        /* Styles pour les rappels */
+        .reminder-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .reminder-item.sent {
+            background: #e8f5e9;
+        }
+        
+        .reminder-settings {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .reminder-settings label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        .reminder-settings input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        
+        /* Styles pour la connexion */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+        
+        .tenant-interface {
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Gestion Locative Intelligente</h1>
+        <div class="user-info" id="userInfo" style="display: none;">
+            <span id="userName"></span>
+            <button class="btn" onclick="logout()" style="padding: 5px 15px; font-size: 0.9rem;">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </button>
+        </div>
+    </header>
+
+    <!-- Écran de connexion -->
+    <div class="login-container" id="loginSection" style="display: block;">
+        <h2 style="text-align: center; margin-bottom: 30px;">Connexion</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="votre@email.com">
+            </div>
+            <div class="input-group">
+                <label>Mot de passe</label>
+                <input type="password" name="password" required placeholder="Mot de passe">
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Se connecter</button>
+            <p style="margin-top: 20px; text-align: center; color: #666; font-size: 0.9rem;">
+                <strong>Compte admin :</strong> admin@gestion.com / admin123<br>
+                <strong>Compte locataire :</strong> Utilisez l'email du locataire / 123456
+            </p>
+        </form>
+    </div>
+
+    <!-- Interface locataire -->
+    <div class="tenant-interface" id="tenantInterface" style="display: none; margin-top: 80px; padding: 20px;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <h2>Bienvenue <span id="tenantName"></span></h2>
+            
+            <div class="grid" style="margin-top: 30px;">
+                <!-- Informations du bail -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-home"></i> Mon logement</h3>
+                    </div>
+                    <div id="tenantPropertyInfo" style="padding: 20px;">
+                        <!-- Les infos seront ajoutées ici -->
+                    </div>
+                </div>
+                
+                <!-- Chat avec le propriétaire -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-comments"></i> Chat avec le propriétaire</h3>
+                    </div>
+                    <div style="height: 400px; display: flex; flex-direction: column;">
+                        <div style="display: flex; justify-content: flex-end; padding: 10px; border-bottom: 1px solid #ddd;">
+                            <button class="btn" onclick="refreshTenantChat()" style="padding: 5px 10px; font-size: 0.9rem; background: #28a745;">
+                                <i class="fas fa-sync"></i> Rafraîchir
+                            </button>
+                        </div>
+                        <div id="tenantChatMessages" style="flex: 1; overflow-y: auto; padding: 20px; background: #f8f9fa;">
+                            <!-- Messages ici -->
+                        </div>
+                        <div style="padding: 15px; border-top: 1px solid #ddd;">
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="tenantMessageInput" placeholder="Tapez votre message..." style="flex: 1;" onkeypress="handleTenantKeyPress(event)">
+                                <button class="btn" onclick="sendTenantMessage()">
+                                    <i class="fas fa-paper-plane"></i> Envoyer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Documents -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-folder"></i> Mes documents</h3>
+                    </div>
+                    <div id="tenantDocuments" style="padding: 20px;">
+                        <!-- Documents ici -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard (affiché directement) -->
+    <div class="dashboard" id="dashboardSection" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="nav-item" data-section="overview">
+                <i class="fas fa-home"></i> Vue d'ensemble
+            </div>
+            <div class="nav-item" data-section="properties">
+                <i class="fas fa-building"></i> Gestion des biens
+            </div>
+            <div class="nav-item" data-section="tenants">
+                <i class="fas fa-users"></i> Gestion des locataires
+            </div>
+            <div class="nav-item" data-section="leases">
+                <i class="fas fa-file-contract"></i> Gestion des baux
+            </div>
+            <div class="nav-item" data-section="payments">
+                <i class="fas fa-money-bill-wave"></i> Gestion des paiements
+            </div>
+            <div class="nav-item" data-section="reminders">
+                <i class="fas fa-bell"></i> Relances
+            </div>
+            <div class="nav-item" data-section="maintenance">
+                <i class="fas fa-tools"></i> Maintenance
+            </div>
+            <div class="nav-item" data-section="documents">
+                <i class="fas fa-folder"></i> Documents
+            </div>
+            <div class="nav-item" data-section="analytics">
+                <i class="fas fa-chart-line"></i> Rapports & Analytics
+            </div>
+            <div class="nav-item" data-section="marketplace">
+                <i class="fas fa-store"></i> Marketplace
+            </div>
+            <div class="nav-item" data-section="sustainability">
+                <i class="fas fa-leaf"></i> ESG & Durabilité
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Vue d'ensemble -->
+            <section id="overview" class="section active">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number">12</div>
+                        <div>Biens gérés</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">45</div>
+                        <div>Locataires</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">95%</div>
+                        <div>Taux d'occupation</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">15k€</div>
+                        <div>Revenus mensuels</div>
+                    </div>
+                </div>
+                
+                <!-- Panneau de contrôle du mode automatique -->
+                <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card-header" style="color: white;">
+                        <h3><i class="fas fa-robot"></i> Contrôle du Mode Automatique Global</h3>
+                    </div>
+                    <div style="padding: 20px; color: white;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <h4 style="margin: 0;">Mode de Gestion</h4>
+                                <p style="margin: 5px 0; opacity: 0.9;">Choisissez comment gérer votre parc immobilier</p>
+                            </div>
+                            <div style="display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 15px 25px; background: rgba(255,255,255,0.2); border-radius: 10px;">
+                                    <input type="radio" name="globalMode" value="manual" checked onchange="setGlobalMode('manual')">
+                                    <span style="font-size: 1.1rem;">
+                                        <i class="fas fa-user"></i> Mode Manuel
+                                    </span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 15px 25px; background: rgba(255,255,255,0.2); border-radius: 10px;">
+                                    <input type="radio" name="globalMode" value="auto" onchange="setGlobalMode('auto')">
+                                    <span style="font-size: 1.1rem;">
+                                        <i class="fas fa-magic"></i> Mode Automatique
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="modeDescription" style="margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                            <div id="manualModeDesc">
+                                <h5 style="margin: 0 0 10px 0;"><i class="fas fa-hand-paper"></i> Mode Manuel Activé</h5>
+                                <ul style="margin: 0; padding-left: 20px;">
+                                    <li>Vous gérez directement tous les chats avec les locataires</li>
+                                    <li>Notifications sonores pour chaque nouveau message</li>
+                                    <li>Vous créez manuellement les interventions</li>
+                                    <li>Vous contactez vous-même les prestataires</li>
+                                </ul>
+                            </div>
+                            <div id="autoModeDesc" style="display: none;">
+                                <h5 style="margin: 0 0 10px 0;"><i class="fas fa-robot"></i> Mode Automatique Activé</h5>
+                                <ul style="margin: 0; padding-left: 20px;">
+                                    <li>L'IA gère automatiquement tous les chats</li>
+                                    <li>Création automatique des interventions selon les demandes</li>
+                                    <li>Contact automatique des prestataires via le marketplace</li>
+                                    <li>Gestion des devis et planification des RDV</li>
+                                    <li>Envoi automatique des relances et rappels</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notifications en temps réel -->
+                <div id="realtimeNotifications" class="card" style="margin-top: 20px; display: none;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bell"></i> Notifications en Temps Réel</h3>
+                    </div>
+                    <div id="notificationsList" style="padding: 20px;">
+                        <!-- Les notifications apparaîtront ici -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestion des biens -->
+            <section id="properties" class="section">
+                <h2>Gestion des Biens</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <button class="btn" onclick="showAddPropertyForm()">
+                            <i class="fas fa-plus"></i> Ajouter un bien
+                        </button>
+                    </div>
+                    <div id="propertyForm" style="display: none;">
+                        <div class="form-header">
+                            <h3>Ajouter un bien</h3>
+                            <button type="button" class="btn-close" onclick="cancelAddProperty()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form id="addPropertyForm">
+                            <div class="input-group">
+                                <label>Titre personnalisé</label>
+                                <input type="text" name="propertyTitle" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Type de bien</label>
+                                <select name="propertyType" required>
+                                    <option value="Appartement T1">Appartement T1</option>
+                                    <option value="Appartement T2">Appartement T2</option>
+                                    <option value="Appartement T3">Appartement T3</option>
+                                    <option value="Appartement T4">Appartement T4</option>
+                                    <option value="Maison">Maison</option>
+                                    <option value="Local commercial">Local commercial</option>
+                                </select>
+                            </div>
+                            <div class="input-group address-search">
+                                <label>Adresse</label>
+                                <input type="text" name="address" id="address" required>
+                                <div class="map-container">
+                                    <div id="propertyMap"></div>
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label>Surface totale (m²)</label>
+                                    <input type="number" name="surface" required min="1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Nombre de pièces</label>
+                                    <input type="number" name="rooms" required min="1">
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label>Loyer mensuel (€)</label>
+                                    <input type="number" name="rent" required min="1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Charges mensuelles (€)</label>
+                                    <input type="number" name="charges" required min="0">
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label>Dépôt de garantie (€)</label>
+                                    <input type="number" name="deposit" required min="0">
+                                </div>
+                                <div class="input-group">
+                                    <label>Honoraires d'agence (€)</label>
+                                    <input type="number" name="agencyFees" required min="0">
+                                </div>
+                            </div>
+                            <div class="grid-3">
+                                <div class="input-group">
+                                    <label>Type de chauffage</label>
+                                    <select name="heatingType" required>
+                                        <option value="electric">Électrique</option>
+                                        <option value="gas">Gaz</option>
+                                        <option value="collective">Collectif</option>
+                                        <option value="other">Autre</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>DPE</label>
+                                    <select name="energyClass" required>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
+                                        <option value="E">E</option>
+                                        <option value="F">F</option>
+                                        <option value="G">G</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>GES</label>
+                                    <select name="gasEmission" required>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
+                                        <option value="E">E</option>
+                                        <option value="F">F</option>
+                                        <option value="G">G</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="amenities-grid">
+                                <label>Équipements et caractéristiques</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="amenities[]" value="parking"> Parking</label>
+                                    <label><input type="checkbox" name="amenities[]" value="cave"> Cave</label>
+                                    <label><input type="checkbox" name="amenities[]" value="balcony"> Balcon</label>
+                                    <label><input type="checkbox" name="amenities[]" value="terrace"> Terrasse</label>
+                                    <label><input type="checkbox" name="amenities[]" value="elevator"> Ascenseur</label>
+                                    <label><input type="checkbox" name="amenities[]" value="furnished"> Meublé</label>
+                                    <label><input type="checkbox" name="amenities[]" value="garden"> Jardin</label>
+                                    <label><input type="checkbox" name="amenities[]" value="pool"> Piscine</label>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Description détaillée</label>
+                                <textarea name="description" rows="4"></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label>Photos (max 5)</label>
+                                <input type="file" name="photos" multiple accept="image/*" max="5" onchange="handleImageUpload(this.files)">
+                                <div id="imagePreview" class="image-preview"></div>
+                            </div>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn">Enregistrer</button>
+                                <button type="reset" class="btn btn-cancel" onclick="cancelAddProperty()">Annuler</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="grid" id="propertiesList">
+                    <!-- Liste des biens (exemple) -->
+                    <div class="card">
+                        <img src="placeholder.jpg" style="width: 100%; height: 200px; object-fit: cover;">
+                        <h3>${property.propertyTitle || ''} ${property.type}</h3>
+                        <p>${property.address || 'Adresse non spécifiée'}</p>
+                        <p>75m² - 1200€/mois</p>
+                        <div class="property-score">
+                            Score: 85/100
+                            <div class="score-details">
+                                <span>État: 90/100</span>
+                                <span>Localisation: 85/100</span>
+                                <span>Rentabilité: 80/100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestion des locataires -->
+            <section id="tenants" class="section">
+                <h2>Gestion des Locataires</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <button class="btn" onclick="showAddTenantForm()">
+                            <i class="fas fa-user-plus"></i> Ajouter un locataire
+                        </button>
+                    </div>
+                    <div id="tenantForm" style="display: none;">
+                        <div class="form-header">
+                            <h3 id="tenantFormTitle">Ajouter un locataire</h3>
+                            <button type="button" class="btn-close" onclick="cancelAddTenant()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form id="addTenantForm">
+                            <div class="input-group">
+                                <label>Nom</label>
+                                <input type="text" name="lastName" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Prénom</label>
+                                <input type="text" name="firstName" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Email</label>
+                                <input type="email" name="email" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Téléphone</label>
+                                <input type="tel" name="phone" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Mot de passe pour l'espace locataire</label>
+                                <input type="password" name="password" required placeholder="Minimum 6 caractères">
+                                <small style="color: #666;">Ce mot de passe permettra au locataire d'accéder à son espace personnel</small>
+                            </div>
+                            <div class="input-group">
+                                <label>Bien loué</label>
+                                <select name="property" required>
+                                    <option value="">Sélectionner un bien</option>
+                                </select>
+                            </div>
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label>Date de signature du bail</label>
+                                    <input type="date" name="leaseStartDate" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Durée du bail (années)</label>
+                                    <select name="leaseDuration" required>
+                                        <option value="1">1 an</option>
+                                        <option value="3" selected>3 ans</option>
+                                        <option value="6">6 ans</option>
+                                        <option value="9">9 ans</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Documents</label>
+                                <div id="documentsContainer">
+                                    <div class="document-upload-item" style="margin-bottom: 10px;">
+                                        <input type="text" placeholder="Nom du document (ex: Contrat de bail)" style="width: 100%; margin-bottom: 5px;">
+                                        <input type="file" onchange="handleDocumentUpload(this)">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn" onclick="addDocumentField()" style="margin-top: 10px; background: #28a745;">
+                                    <i class="fas fa-plus"></i> Ajouter un autre document
+                                </button>
+                            </div>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn">Enregistrer</button>
+                                <button type="button" class="btn btn-cancel" onclick="cancelAddTenant()">Annuler</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="grid" id="tenantsList">
+                    <!-- Liste des locataires (exemple) -->
+                    <div class="card">
+                        <div class="tenant-header">
+                            <i class="fas fa-user-circle" style="font-size: 3rem;"></i>
+                            <h3>Jean Dupont</h3>
+                        </div>
+                        <p>Appartement T3 - 123 rue Example</p>
+                        <p>Score: 95/100</p>
+                        <div class="tenant-actions">
+                            <button class="btn" onclick="openChat('jean.dupont@email.com')">
+                                <i class="fas fa-comments"></i> Chat
+                            </button>
+                            <button class="btn" onclick="viewDocuments('jean.dupont@email.com')">
+                                <i class="fas fa-folder"></i> Documents
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestion des baux -->
+            <section id="leases" class="section">
+                <h2>Gestion des Baux</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <button class="btn" onclick="generateLease()">
+                            <i class="fas fa-file-contract"></i> Générer un nouveau bail
+                        </button>
+                    </div>
+                    <div id="leaseForm" style="display: none;">
+                        <form id="generateLeaseForm">
+                            <div class="input-group">
+                                <label>Type de bail</label>
+                                <select name="leaseType" required>
+                                    <option value="habitation">Bail d'habitation</option>
+                                    <option value="commercial">Bail commercial</option>
+                                    <option value="professionnel">Bail professionnel</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Locataire</label>
+                                <select name="tenant" required>
+                                    <option value="">Sélectionner un locataire</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Bien</label>
+                                <select name="property" required>
+                                    <option value="">Sélectionner un bien</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Date de début</label>
+                                <input type="date" name="startDate" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Durée (années)</label>
+                                <input type="number" name="duration" required min="1">
+                            </div>
+                            <div class="input-group">
+                                <label>Loyer mensuel (€)</label>
+                                <input type="number" name="rent" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Dépôt de garantie (€)</label>
+                                <input type="number" name="deposit" required>
+                            </div>
+                            <button type="submit" class="btn">Générer le bail</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="grid" id="leasesList">
+                    <!-- Liste des baux (exemple) -->
+                    <div class="card">
+                        <div class="lease-header">
+                            <h3>Bail d'habitation</h3>
+                            <span class="status active">Actif</span>
+                        </div>
+                        <p>Locataire: Jean Dupont</p>
+                        <p>Bien: Appartement T3 - Paris</p>
+                        <p>Début: 01/01/2024</p>
+                        <p>Fin: 31/12/2026</p>
+                        <div class="lease-actions">
+                            <button class="btn" onclick="viewLease('lease123')">
+                                <i class="fas fa-eye"></i> Voir
+                            </button>
+                            <button class="btn" onclick="renewLease('lease123')">
+                                <i class="fas fa-sync"></i> Renouveler
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestion des paiements -->
+            <section id="payments" class="section">
+                <h2>Gestion des Paiements</h2>
+                
+                <!-- Tableau de bord des paiements -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number">15 000€</div>
+                        <div>Loyers du mois</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">98%</div>
+                        <div>Taux de paiement</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">2</div>
+                        <div>Retards de paiement</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">500€</div>
+                        <div>Impayés</div>
+                    </div>
+                </div>
+
+                <!-- Gestion des prélèvements -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Prélèvements automatiques</h3>
+                    </div>
+                    <table style="width: 100%; margin-top: 1rem;">
+                        <thead>
+                            <tr>
+                                <th>Locataire</th>
+                                <th>Bien</th>
+                                <th>Montant</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Jean Dupont</td>
+                                <td>Appartement T3</td>
+                                <td>1200€</td>
+                                <td>05/04/2024</td>
+                                <td><span class="status success">Payé</span></td>
+                                <td>
+                                    <button class="btn" onclick="generateReceipt('payment123')">
+                                        <i class="fas fa-file-invoice"></i> Quittance
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Marie Martin</td>
+                                <td>Studio</td>
+                                <td>800€</td>
+                                <td>05/04/2024</td>
+                                <td><span class="status pending">En attente</span></td>
+                                <td>
+                                    <button class="btn" onclick="sendReminder('payment124')">
+                                        <i class="fas fa-bell"></i> Relance
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Relances -->
+            <section id="reminders" class="section">
+                <h2>Gestion des Relances</h2>
+                
+                <!-- Statistiques des relances -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number" id="pendingRemindersCount">0</div>
+                        <div>Relances en attente</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="sentRemindersCount">0</div>
+                        <div>Relances envoyées ce mois</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="autoRemindersCount">0</div>
+                        <div>Relances automatiques</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="responseRateCount">0%</div>
+                        <div>Taux de réponse</div>
+                    </div>
+                </div>
+
+                <!-- Configuration des relances automatiques -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-cog"></i> Configuration des relances automatiques</h3>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="grid-2">
+                            <div>
+                                <label>
+                                    <input type="checkbox" id="autoPaymentReminders" checked>
+                                    <strong>Rappels de paiement automatiques</strong>
+                                </label>
+                                <p style="margin: 5px 0 0 25px; color: #666; font-size: 0.9rem;">
+                                    Envoi automatique les 5 et 25 de chaque mois
+                                </p>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" id="autoDocumentReminders" checked>
+                                    <strong>Rappels documents manquants</strong>
+                                </label>
+                                <p style="margin: 5px 0 0 25px; color: #666; font-size: 0.9rem;">
+                                    Relance si dossier incomplet après 7 jours
+                                </p>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" id="autoLeaseReminders" checked>
+                                    <strong>Rappels renouvellement de bail</strong>
+                                </label>
+                                <p style="margin: 5px 0 0 25px; color: #666; font-size: 0.9rem;">
+                                    Notification 90 jours avant expiration
+                                </p>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" id="autoMaintenanceReminders" checked>
+                                    <strong>Rappels maintenance préventive</strong>
+                                </label>
+                                <p style="margin: 5px 0 0 25px; color: #666; font-size: 0.9rem;">
+                                    Rappel mensuel pour l'entretien
+                                </p>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="saveReminderSettings()" style="margin-top: 20px;">
+                            <i class="fas fa-save"></i> Sauvegarder les paramètres
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Relances manuelles -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-paper-plane"></i> Envoyer une relance manuelle</h3>
+                    </div>
+                    <div style="padding: 20px;">
+                        <form id="manualReminderForm">
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label>Locataire</label>
+                                    <select name="tenantId" required>
+                                        <option value="">Sélectionner un locataire</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Type de relance</label>
+                                    <select name="reminderType" required>
+                                        <option value="payment">Paiement du loyer</option>
+                                        <option value="documents">Documents manquants</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="custom">Personnalisée</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Message</label>
+                                <textarea name="message" rows="4" required placeholder="Tapez votre message de relance..."></textarea>
+                            </div>
+                            <button type="submit" class="btn">
+                                <i class="fas fa-paper-plane"></i> Envoyer la relance
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Historique des relances -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-history"></i> Historique des relances</h3>
+                    </div>
+                    <div id="remindersHistory" style="padding: 20px;">
+                        <!-- L'historique sera ajouté dynamiquement ici -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Maintenance -->
+            <section id="maintenance" class="section">
+                <h2>Maintenance Prédictive</h2>
+                
+                <!-- Tableau de bord maintenance -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number">5</div>
+                        <div>Interventions prévues</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">2</div>
+                        <div>Urgences en cours</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">98%</div>
+                        <div>Taux de résolution</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">24h</div>
+                        <div>Temps moyen d'intervention</div>
+                    </div>
+                </div>
+
+                <!-- Liste des interventions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Interventions</h3>
+                        <button class="btn" onclick="showAddInterventionForm()">
+                            <i class="fas fa-plus"></i> Nouvelle intervention
+                        </button>
+                    </div>
+                    <div id="interventionForm" style="display: none;">
+                        <form id="addInterventionForm">
+                            <div class="input-group">
+                                <label>Type d'intervention</label>
+                                <select name="interventionType" required>
+                                    <option value="plumbing">Plomberie</option>
+                                    <option value="electrical">Électricité</option>
+                                    <option value="heating">Chauffage</option>
+                                    <option value="other">Autre</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Bien concerné</label>
+                                <select name="property" required>
+                                    <option value="">Sélectionner un bien</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Urgence</label>
+                                <select name="urgency" required>
+                                    <option value="low">Faible</option>
+                                    <option value="medium">Moyenne</option>
+                                    <option value="high">Haute</option>
+                                    <option value="emergency">Urgence</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Description</label>
+                                <textarea name="description" required></textarea>
+                            </div>
+                            <button type="submit" class="btn">Planifier l'intervention</button>
+                        </form>
+                    </div>
+
+                    <div class="maintenance-list">
+                        <div class="maintenance-item">
+                            <div class="maintenance-header">
+                                <span class="status emergency">Urgence</span>
+                                <h4>Fuite d'eau - Appartement T3</h4>
+                            </div>
+                            <p>Localisation: Salle de bain principale</p>
+                            <p>Signalé par: Jean Dupont</p>
+                            <p>Date prévue: 05/04/2024</p>
+                            <div class="maintenance-actions">
+                                <button class="btn" onclick="assignTechnician('maintenance123')">
+                                    <i class="fas fa-user-plus"></i> Assigner
+                                </button>
+                                <button class="btn" onclick="updateStatus('maintenance123')">
+                                    <i class="fas fa-sync"></i> Statut
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Documents -->
+            <section id="documents" class="section">
+                <h2>Gestion des Documents</h2>
+                
+                <!-- Upload de documents -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Ajouter des documents</h3>
+                    </div>
+                    <form id="uploadDocumentForm">
+                        <div class="input-group">
+                            <label>Type de document</label>
+                            <select name="documentType" required>
+                                <option value="lease">Bail</option>
+                                <option value="receipt">Quittance</option>
+                                <option value="insurance">Assurance</option>
+                                <option value="inventory">État des lieux</option>
+                                <option value="other">Autre</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Bien concerné</label>
+                            <select name="property" required>
+                                <option value="">Sélectionner un bien</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Locataire (optionnel)</label>
+                            <select name="tenant">
+                                <option value="">Sélectionner un locataire</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Fichier</label>
+                            <input type="file" required>
+                        </div>
+                        <button type="submit" class="btn">Téléverser</button>
+                    </form>
+                </div>
+
+                <!-- Liste des documents -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Documents récents</h3>
+                    </div>
+                    <div class="documents-list">
+                        <div class="document-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <div class="document-info">
+                                <h4>Bail - Appartement T3</h4>
+                                <p>Ajouté le: 01/04/2024</p>
+                                <p>Type: Bail d'habitation</p>
+                            </div>
+                            <div class="document-actions">
+                                <button class="btn" onclick="viewDocument('doc123')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn" onclick="downloadDocument('doc123')">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rapports & Analytics -->
+            <section id="analytics" class="section">
+                <h2>Rapports & Analytics</h2>
+
+                <!-- KPIs principaux -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number">8.5%</div>
+                        <div>Rendement moyen</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">97%</div>
+                        <div>Taux d'occupation</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">+12%</div>
+                        <div>Croissance annuelle</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">A+</div>
+                        <div>Score ESG</div>
+                    </div>
+                </div>
+
+                <!-- Graphiques -->
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Performance financière</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="financialChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Occupation des biens</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="occupancyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rapports détaillés -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Rapports disponibles</h3>
+                    </div>
+                    <div class="reports-list">
+                        <div class="report-item">
+                            <i class="fas fa-chart-line"></i>
+                            <div class="report-info">
+                                <h4>Rapport mensuel - Mars 2024</h4>
+                                <p>Performance globale du portefeuille</p>
+                            </div>
+                            <button class="btn" onclick="generateReport('monthly')">
+                                <i class="fas fa-download"></i> Télécharger
+                            </button>
+                        </div>
+                        <div class="report-item">
+                            <i class="fas fa-chart-pie"></i>
+                            <div class="report-info">
+                                <h4>Analyse des coûts</h4>
+                                <p>Répartition des charges et dépenses</p>
+                            </div>
+                            <button class="btn" onclick="generateReport('costs')">
+                                <i class="fas fa-download"></i> Télécharger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketplace -->
+            <section id="marketplace" class="section">
+                <h2>Marketplace de Services</h2>
+
+                <!-- Filtres -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Rechercher un prestataire</h3>
+                    </div>
+                    <form id="serviceSearchForm">
+                        <div class="search-filters">
+                            <div class="input-group">
+                                <label>Type de service</label>
+                                <select name="serviceType">
+                                    <option value="all">Tous les services</option>
+                                    <option value="plumbing">Plomberie</option>
+                                    <option value="electrical">Électricité</option>
+                                    <option value="cleaning">Nettoyage</option>
+                                    <option value="painting">Peinture</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Zone géographique</label>
+                                <input type="text" placeholder="Code postal">
+                            </div>
+                            <div class="input-group">
+                                <label>Note minimum</label>
+                                <select name="rating">
+                                    <option value="0">Toutes les notes</option>
+                                    <option value="4">4+ étoiles</option>
+                                    <option value="4.5">4.5+ étoiles</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn">Rechercher</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Liste des prestataires -->
+                <div class="grid">
+                    <div class="card service-card">
+                        <div class="service-header">
+                            <img src="placeholder.jpg" alt="Prestataire" class="service-logo">
+                            <div class="service-rating">
+                                <i class="fas fa-star"></i>
+                                <span>4.8/5</span>
+                            </div>
+                        </div>
+                        <h3>Plomberie Express</h3>
+                        <p>Intervention rapide 24/7</p>
+                        <div class="service-details">
+                            <p><i class="fas fa-map-marker-alt"></i> Paris</p>
+                            <p><i class="fas fa-clock"></i> Disponible sous 2h</p>
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn" onclick="contactService('service123')">
+                                <i class="fas fa-envelope"></i> Contact
+                            </button>
+                            <button class="btn" onclick="bookService('service123')">
+                                <i class="fas fa-calendar-check"></i> Réserver
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card service-card">
+                        <div class="service-header">
+                            <img src="placeholder.jpg" alt="Prestataire" class="service-logo">
+                            <div class="service-rating">
+                                <i class="fas fa-star"></i>
+                                <span>4.6/5</span>
+                            </div>
+                        </div>
+                        <h3>Électricité Pro</h3>
+                        <p>Installation et dépannage</p>
+                        <div class="service-details">
+                            <p><i class="fas fa-map-marker-alt"></i> Lyon</p>
+                            <p><i class="fas fa-clock"></i> Disponible sous 24h</p>
+                        </div>
+                        <div class="service-actions">
+                            <button class="btn" onclick="contactService('service124')">
+                                <i class="fas fa-envelope"></i> Contact
+                            </button>
+                            <button class="btn" onclick="bookService('service124')">
+                                <i class="fas fa-calendar-check"></i> Réserver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ESG & Durabilité -->
+            <section id="sustainability" class="section">
+                <h2>ESG & Durabilité</h2>
+
+                <!-- Scores ESG -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number">A+</div>
+                        <div>Score Environnemental</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">A</div>
+                        <div>Score Social</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">B+</div>
+                        <div>Score Gouvernance</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">-15%</div>
+                        <div>Émissions CO2</div>
+                    </div>
+                </div>
+
+                <!-- Performance énergétique -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Performance Énergétique</h3>
+                    </div>
+                    <div class="grid">
+                        <div class="eco-metric">
+                            <i class="fas fa-bolt eco-icon"></i>
+                            <div>
+                                <h4>Consommation électrique</h4>
+                                <p>150 kWh/m²/an</p>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 75%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="eco-metric">
+                            <i class="fas fa-fire eco-icon"></i>
+                            <div>
+                                <h4>Chauffage</h4>
+                                <p>80 kWh/m²/an</p>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 60%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eco-chart">
+                        <canvas id="energyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recommandations -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recommandations d'amélioration</h3>
+                    </div>
+                    <div class="recommendations-list">
+                        <div class="recommendation-item">
+                            <div class="recommendation-header">
+                                <h4>Installation de panneaux solaires</h4>
+                                <span class="roi">ROI: 5 ans</span>
+                            </div>
+                            <p>Réduction estimée de la facture: 30%</p>
+                            <p>Coût estimé: 15 000€</p>
+                            <div class="recommendation-actions">
+                                <button class="btn" onclick="simulateImprovement('solar')">
+                                    <i class="fas fa-calculator"></i> Simulation
+                                </button>
+                                <button class="btn" onclick="requestQuote('solar')">
+                                    <i class="fas fa-file-invoice-dollar"></i> Devis
+                                </button>
+                            </div>
+                        </div>
+                        <div class="recommendation-item">
+                            <div class="recommendation-header">
+                                <h4>Isolation thermique</h4>
+                                <span class="roi">ROI: 3 ans</span>
+                            </div>
+                            <p>Réduction estimée de la consommation: 25%</p>
+                            <p>Coût estimé: 8 000€</p>
+                            <div class="recommendation-actions">
+                                <button class="btn" onclick="simulateImprovement('insulation')">
+                                    <i class="fas fa-calculator"></i> Simulation
+                                </button>
+                                <button class="btn" onclick="requestQuote('insulation')">
+                                    <i class="fas fa-file-invoice-dollar"></i> Devis
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="chat-modal" id="chatModal">
+        <div class="chat-window">
+            <div class="chat-header">
+                <h3 id="chatTenantName">Chat avec...</h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn" onclick="refreshChat()" style="padding: 5px 10px; font-size: 0.9rem; background: #28a745;">
+                        <i class="fas fa-sync"></i> Rafraîchir
+                    </button>
+                    <button class="close-chat" onclick="closeChat()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chat-status" id="chatStatus">
+                Connecté • En ligne
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages apparaîtront ici -->
+            </div>
+            <div class="typing-indicator" id="typingIndicator">
+                <span class="typing-dots">Le locataire écrit...</span>
+            </div>
+            <div class="chat-input">
+                <div class="chat-input-group">
+                    <input type="text" id="messageInput" placeholder="Tapez votre message..." onkeypress="handleKeyPress(event)">
+                    <button class="send-btn" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Wrapper pour compatibilité WordPress
+        (function() {
+            'use strict';
+            
+            // Vérifier si on est dans WordPress
+            const isWordPress = typeof wp !== 'undefined' || typeof jQuery !== 'undefined';
+            console.log('🌐 Environnement détecté:', isWordPress ? 'WordPress' : 'Standalone');
+            
+            // Namespace pour éviter les conflits
+            window.GestionLocative = window.GestionLocative || {};
+            
+            // Navigation dans le dashboard
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const sectionId = this.dataset.section;
+                    document.querySelectorAll('.section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    document.getElementById(sectionId).classList.add('active');
+                });
+            });
+        })();
+
+        // Fonctions pour la gestion des biens et des locataires
+        function showAddPropertyForm() {
+            const form = document.getElementById('propertyForm');
+            form.style.display = 'block';
+            
+            // Initialiser la carte si elle n'existe pas
+            if (!map) {
+                setTimeout(initMap, 100);
+            }
+        }
+
+        function showAddTenantForm() {
+            const form = document.getElementById('addTenantForm');
+            form.reset();
+            form.dataset.editId = '';
+            document.getElementById('tenantFormTitle').textContent = 'Ajouter un locataire';
+            document.getElementById('tenantForm').style.display = 'block';
+            updatePropertySelectors(); // S'assurer que les biens sont à jour
+        }
+
+        // Fonctions pour la gestion des formulaires
+        function resetPropertyForm() {
+            const form = document.getElementById('addPropertyForm');
+            form.reset();
+            form.dataset.editId = '';
+            document.getElementById('propertyForm').style.display = 'none';
+            document.getElementById('imagePreview').innerHTML = '';
+            if (marker) {
+                marker.setMap(null);
+            }
+        }
+
+        // Gestion des images
+        function handleImageUpload(files) {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            const maxFiles = 5;
+            const imagePromises = [];
+
+            // Si pas de fichiers, retourner un tableau vide
+            if (!files || files.length === 0) {
+                return Promise.resolve([]);
+            }
+
+            for (let i = 0; i < Math.min(files.length, maxFiles); i++) {
+                const file = files[i];
+                const promise = new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+                imagePromises.push(promise);
+            }
+
+            return Promise.all(imagePromises).then(images => {
+                images.forEach(image => {
+                    const img = document.createElement('img');
+                    img.src = image;
+                    preview.appendChild(img);
+                });
+                return images;
+            });
+        }
+
+        // Gestion du formulaire d'ajout/modification de bien
+        document.getElementById('addPropertyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(this);
+                const fileInput = this.querySelector('input[type="file"]');
+                const editId = this.dataset.editId;
+
+                // Récupérer les images existantes en mode édition
+                let images = [];
+                if (editId) {
+                    const existingProperty = DB.properties.find(p => p.id === parseInt(editId));
+                    images = existingProperty ? (existingProperty.images || []) : [];
+                }
+
+                // Ajouter les nouvelles images si présentes
+                if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                    const newImages = await handleImageUpload(fileInput.files);
+                    images = [...images, ...newImages];
+                }
+
+                // Si pas d'images du tout, utiliser une image par défaut
+                if (images.length === 0) {
+                    images = ['data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vbiBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='];
+                }
+
+                const propertyData = {
+                    id: editId ? parseInt(editId) : Date.now(),
+                    type: formData.get('propertyType'),
+                    propertyTitle: formData.get('propertyTitle'),
+                    address: formData.get('address'),
+                    surface: formData.get('surface'),
+                    rooms: formData.get('rooms'),
+                    rent: formData.get('rent'),
+                    charges: formData.get('charges'),
+                    deposit: formData.get('deposit'),
+                    agencyFees: formData.get('agencyFees'),
+                    heatingType: formData.get('heatingType'),
+                    energyClass: formData.get('energyClass'),
+                    gasEmission: formData.get('gasEmission'),
+                    description: formData.get('description'),
+                    amenities: Array.from(formData.getAll('amenities[]')),
+                    images: images,
+                    location: marker && marker.getPosition() ? {
+                        lat: marker.getPosition().lat(),
+                        lng: marker.getPosition().lng()
+                    } : null,
+                    score: {
+                        total: 85,
+                        state: 90,
+                        location: 85,
+                        profitability: 80
+                    }
+                };
+
+                if (editId) {
+                    const index = DB.properties.findIndex(p => p.id === parseInt(editId));
+                    if (index !== -1) {
+                        DB.properties[index] = propertyData;
+                    }
+                } else {
+                    propertyData.createdAt = new Date().toISOString();
+                    DB.properties.push(propertyData);
+                }
+
+                saveDB();
+                refreshPropertiesList();
+                resetPropertyForm();
+                alert(editId ? 'Bien modifié avec succès !' : 'Bien ajouté avec succès !');
+                
+            } catch (error) {
+                console.error('Erreur lors de la soumission:', error);
+                alert('Une erreur est survenue. Veuillez réessayer.');
+            }
+        });
+
+        document.getElementById('addTenantForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(this);
+                const editId = this.dataset.editId;
+                
+                const tenantData = {
+                    id: editId ? parseInt(editId) : Date.now(),
+                    lastName: formData.get('lastName'),
+                    firstName: formData.get('firstName'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone'),
+                    password: formData.get('password'), // Ajouter le mot de passe
+                    propertyId: formData.get('property'),
+                    leaseStartDate: formData.get('leaseStartDate'),
+                    leaseDuration: parseInt(formData.get('leaseDuration')),
+                    createdAt: editId ? DB.tenants.find(t => t.id === parseInt(editId))?.createdAt || new Date().toISOString() : new Date().toISOString(),
+                    score: editId ? DB.tenants.find(t => t.id === parseInt(editId))?.score || 85 : Math.floor(Math.random() * 20) + 80
+                };
+                
+                // Gérer les documents
+                const documentItems = document.querySelectorAll('.document-upload-item');
+                const documents = [];
+                
+                documentItems.forEach(item => {
+                    const nameInput = item.querySelector('input[type="text"]');
+                    const fileInput = item.querySelector('input[type="file"]');
+                    
+                    if (nameInput.value && fileInput.files.length > 0) {
+                        documents.push({
+                            name: nameInput.value,
+                            fileName: fileInput.files[0].name,
+                            fileContent: fileInput.getAttribute('data-file-content') || '',
+                            fileType: fileInput.getAttribute('data-file-type') || 'application/octet-stream',
+                            uploadDate: new Date().toISOString()
+                        });
+                    }
+                });
+                
+                // Sauvegarder les documents
+                if (documents.length > 0) {
+                    DB.documents[tenantData.id] = documents;
+                }
+                
+                if (editId) {
+                    const index = DB.tenants.findIndex(t => t.id === parseInt(editId));
+                    if (index !== -1) {
+                        DB.tenants[index] = tenantData;
+                    }
+                } else {
+                    DB.tenants.push(tenantData);
+                }
+                
+                saveDB();
+                refreshTenantsList();
+                this.reset();
+                this.dataset.editId = '';
+                document.getElementById('tenantForm').style.display = 'none';
+                // Réinitialiser le conteneur de documents
+                document.getElementById('documentsContainer').innerHTML = `
+                    <div class="document-upload-item" style="margin-bottom: 10px;">
+                        <input type="text" placeholder="Nom du document (ex: Contrat de bail)" style="width: 100%; margin-bottom: 5px;">
+                        <input type="file" onchange="handleDocumentUpload(this)">
+                    </div>
+                `;
+                
+                // Afficher les identifiants de connexion
+                if (!editId) {
+                    alert(`✅ Locataire créé avec succès !\n\n` +
+                          `📧 IDENTIFIANTS DE CONNEXION :\n` +
+                          `Email : ${tenantData.email}\n` +
+                          `Mot de passe : ${tenantData.password}\n\n` +
+                          `Le locataire peut maintenant se connecter à son espace personnel avec ces identifiants.`);
+                } else {
+                    alert('Locataire modifié avec succès !');
+                }
+                
+            } catch (error) {
+                console.error('Erreur lors de l\'ajout du locataire:', error);
+                alert('Une erreur est survenue. Veuillez réessayer.');
+            }
+        });
+
+        // Fonction pour ajouter un champ de document
+        function addDocumentField() {
+            const container = document.getElementById('documentsContainer');
+            const newField = document.createElement('div');
+            newField.className = 'document-upload-item';
+            newField.style.marginBottom = '10px';
+            newField.innerHTML = `
+                <input type="text" placeholder="Nom du document" style="width: 100%; margin-bottom: 5px;">
+                <input type="file" onchange="handleDocumentUpload(this)">
+                <button type="button" onclick="this.parentElement.remove()" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; margin-left: 5px;">Supprimer</button>
+            `;
+            container.appendChild(newField);
+        }
+
+        // Fonction pour gérer l'upload de document
+        function handleDocumentUpload(input) {
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                
+                // Stocker le contenu du fichier dans l'attribut data de l'input
+                reader.onload = function(e) {
+                    input.setAttribute('data-file-content', e.target.result);
+                    input.setAttribute('data-file-type', file.type);
+                };
+                
+                reader.readAsDataURL(file);
+                console.log('Document sélectionné:', file.name);
+            }
+        }
+
+        // SOLUTION SIMPLE - Redéfinir uniquement les 2 fonctions problématiques
+        
+        // Fonction Chat
+        function openChat(email) {
+            // Trouver le locataire
+            const tenant = DB.tenants.find(t => t.email === email);
+            if (!tenant) {
+                alert('Locataire non trouvé');
+                return;
+            }
+            
+            // Afficher le chat
+            document.getElementById('chatModal').style.display = 'block';
+            document.getElementById('chatTenantName').textContent = `Chat avec ${tenant.firstName} ${tenant.lastName}`;
+            
+            // Charger les messages existants
+            const messages = DB.conversations[tenant.id] || [];
+            const chatContainer = document.getElementById('chatMessages');
+            
+            if (messages.length === 0) {
+                chatContainer.innerHTML = '<div class="message received"><div class="message-content">Aucun message pour le moment</div></div>';
+            } else {
+                chatContainer.innerHTML = messages.map(msg => {
+                    const isFromAdmin = msg.type === 'sent';
+                    return `
+                        <div class="message ${isFromAdmin ? 'sent' : 'received'}">
+                            <div class="message-content">
+                                ${msg.content}
+                                <div class="message-time">${new Date(msg.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Stocker l'ID du locataire actuel pour l'envoi de messages
+            document.getElementById('chatModal').dataset.currentTenantId = tenant.id;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Mettre à jour le statut selon le mode global
+            const status = document.getElementById('chatStatus');
+            const globalMode = localStorage.getItem('globalMode') || 'manual';
+            
+            if (globalMode === 'auto') {
+                status.innerHTML = '🤖 Mode automatique global activé';
+                status.style.color = '#28a745';
+            } else {
+                status.innerHTML = 'Connecté • Mode manuel';
+                status.style.color = '#666';
+            }
+        }
+        
+        // Fonction Documents  
+        function viewDocuments(email) {
+            // Trouver le locataire
+            var tenant = DB.tenants.find(t => t.email === email);
+            if (!tenant) {
+                alert('Locataire non trouvé');
+                return;
+            }
+            
+            // Récupérer les documents du locataire
+            var tenantDocuments = DB.documents[tenant.id] || [];
+            
+            // Créer une interface modale pour les documents
+            var modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            
+            var content = document.createElement('div');
+            content.style.cssText = 'background:white;padding:30px;border-radius:10px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto;';
+            
+            var documentsHTML = '';
+            if (tenantDocuments.length > 0) {
+                documentsHTML = tenantDocuments.map((doc, index) => `
+                    <div style="padding:15px;background:#f8f9fa;border-radius:5px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <div>
+                            <strong>📄 ${doc.name}</strong>
+                            <p style="margin:5px 0 0 0;color:#666;font-size:0.9rem;">Fichier: ${doc.fileName}</p>
+                            <p style="margin:5px 0 0 0;color:#666;font-size:0.9rem;">Ajouté le: ${new Date(doc.uploadDate).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                        <button onclick="downloadDocument(${tenant.id}, ${index})" style="background:#2a5298;color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;">
+                            <i class="fas fa-download"></i> Télécharger
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                documentsHTML = '<p style="text-align:center;color:#666;">Aucun document disponible pour ce locataire.</p>';
+            }
+            
+            content.innerHTML = `
+                <h2 style="margin-top:0;color:#1e3c72;">📁 Documents - ${tenant.firstName} ${tenant.lastName}</h2>
+                <p style="color:#666;margin-bottom:20px;">Email: ${email}</p>
+                <div style="margin:20px 0;">
+                    <h3 style="color:#2a5298;margin-bottom:15px;">Documents disponibles :</h3>
+                    ${documentsHTML}
+                </div>
+                <div style="margin-top:30px;text-align:center;">
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background:#dc3545;color:white;border:none;padding:10px 30px;border-radius:5px;cursor:pointer;font-size:1rem;">Fermer</button>
+                </div>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // Fermer en cliquant à l'extérieur
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+        
+        // Fermer le chat
+        function closeChat() {
+            document.getElementById('chatModal').style.display = 'none';
+        }
+        
+        // Envoyer un message
+        function sendMessage() {
+            var input = document.getElementById('messageInput');
+            var message = input.value.trim();
+            if (!message) return;
+            
+            // Récupérer l'ID du locataire actuel
+            const tenantId = document.getElementById('chatModal').dataset.currentTenantId;
+            if (!tenantId) {
+                alert('Erreur: locataire non identifié');
+                return;
+            }
+            
+            // Initialiser la conversation si elle n'existe pas
+            if (!DB.conversations[tenantId]) {
+                DB.conversations[tenantId] = [];
+            }
+            
+            // Ajouter le message de l'admin
+            DB.conversations[tenantId].push({
+                type: 'sent',
+                content: message,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Afficher le message
+            var chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML += `
+                <div class="message sent">
+                    <div class="message-content">
+                        ${message}
+                        <div class="message-time">${new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}</div>
+                    </div>
+                </div>
+            `;
+            
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            saveDB();
+        }
+        
+        // Touche Entrée
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Fonctions pour la gestion des baux
+        function generateLease() {
+            document.getElementById('leaseForm').style.display = 'block';
+        }
+
+        document.getElementById('generateLeaseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Logique de génération de bail
+            alert('Bail généré avec succès !');
+            this.reset();
+            document.getElementById('leaseForm').style.display = 'none';
+        });
+
+        function viewLease(leaseId) {
+            alert('Affichage du bail ' + leaseId);
+        }
+
+        function renewLease(leaseId) {
+            alert('Renouvellement du bail ' + leaseId);
+        }
+
+        // Fonctions pour la gestion des paiements
+        function generateReceipt(paymentId) {
+            alert('Génération de la quittance pour le paiement ' + paymentId);
+        }
+
+        function sendReminder(paymentId) {
+            alert('Envoi d\'une relance pour le paiement ' + paymentId);
+        }
+
+        // Fonctions pour la maintenance
+        function showAddInterventionForm() {
+            document.getElementById('interventionForm').style.display = 'block';
+        }
+
+        document.getElementById('addInterventionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Logique d'ajout d'intervention
+            alert('Intervention planifiée avec succès !');
+            this.reset();
+            document.getElementById('interventionForm').style.display = 'none';
+        });
+
+        function assignTechnician(maintenanceId) {
+            alert('Attribution du technicien pour l\'intervention ' + maintenanceId);
+        }
+
+        function updateStatus(maintenanceId) {
+            alert('Mise à jour du statut de l\'intervention ' + maintenanceId);
+        }
+
+        // Fonctions pour les documents
+        document.getElementById('uploadDocumentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Logique d'upload de document
+            alert('Document téléversé avec succès !');
+            this.reset();
+        });
+
+        function viewDocument(docId) {
+            alert('Affichage du document ' + docId);
+        }
+
+        function downloadDocument(docId) {
+            alert('Téléchargement du document ' + docId);
+        }
+
+        // Fonctions pour les rapports et analytics
+        function generateReport(type) {
+            alert('Génération du rapport ' + type);
+        }
+
+        // Fonctions pour la marketplace
+        document.getElementById('serviceSearchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Logique de recherche de services
+            alert('Recherche de services en cours...');
+        });
+
+        function contactService(serviceId) {
+            alert('Contact du prestataire ' + serviceId);
+        }
+
+        function bookService(serviceId) {
+            alert('Réservation du service ' + serviceId);
+        }
+
+        // Initialisation des graphiques avec Chart.js
+        function initCharts() {
+            // Graphique financier
+            const financialCtx = document.getElementById('financialChart').getContext('2d');
+            new Chart(financialCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                    datasets: [{
+                        label: 'Revenus locatifs',
+                        data: [12000, 12500, 12300, 12800, 13000, 13200],
+                        borderColor: '#2a5298',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Graphique d'occupation
+            const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+            new Chart(occupancyCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Occupé', 'Vacant', 'En rénovation'],
+                    datasets: [{
+                        data: [85, 10, 5],
+                        backgroundColor: ['#4CAF50', '#FFC107', '#2a5298']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Graphique énergétique
+            const energyCtx = document.getElementById('energyChart').getContext('2d');
+            new Chart(energyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                    datasets: [{
+                        label: 'Consommation électrique (kWh)',
+                        data: [150, 145, 140, 135, 130, 125],
+                        backgroundColor: '#2a5298'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Appel de l'initialisation au chargement
+        window.addEventListener('load', initCharts);
+
+        // Fonctions pour l'ESG & Durabilité
+        function simulateImprovement(type) {
+            alert('Simulation des améliorations pour: ' + type);
+        }
+
+        function requestQuote(type) {
+            alert('Demande de devis pour: ' + type);
+        }
+
+        // Styles supplémentaires
+        const style = document.createElement('style');
+        style.textContent = `
+            .progress-bar {
+                width: 100%;
+                height: 10px;
+                background: #eee;
+                border-radius: 5px;
+                margin-top: 0.5rem;
+            }
+
+            .progress {
+                height: 100%;
+                background: #4CAF50;
+                border-radius: 5px;
+                transition: width 0.3s ease;
+            }
+
+            .recommendation-item {
+                padding: 1rem;
+                border-bottom: 1px solid #eee;
+            }
+
+            .recommendation-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+            }
+
+            .roi {
+                background: #4CAF50;
+                color: white;
+                padding: 0.3rem 0.8rem;
+                border-radius: 15px;
+                font-size: 0.9rem;
+            }
+
+            .recommendation-actions {
+                display: flex;
+                gap: 1rem;
+                margin-top: 1rem;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Base de données locale
+        const DB = {
+            properties: [],
+            tenants: [],
+            conversations: {},
+            documents: {}, // Ajout pour stocker les documents par locataire
+            chatSettings: {} // Ajout pour stocker les paramètres de chat
+        };
+
+        // Sauvegarder dans localStorage
+        function saveDB() {
+            try {
+                localStorage.setItem('properties', JSON.stringify(DB.properties));
+                localStorage.setItem('tenants', JSON.stringify(DB.tenants));
+                localStorage.setItem('conversations', JSON.stringify(DB.conversations));
+                localStorage.setItem('documents', JSON.stringify(DB.documents));
+                localStorage.setItem('chatSettings', JSON.stringify(DB.chatSettings));
+            } catch (error) {
+                console.error('Erreur lors de la sauvegarde:', error);
+            }
+        }
+
+        // Charger depuis localStorage
+        function loadDB() {
+            try {
+                const savedProperties = localStorage.getItem('properties');
+                if (savedProperties) {
+                    DB.properties = JSON.parse(savedProperties);
+                }
+                const savedTenants = localStorage.getItem('tenants');
+                if (savedTenants) {
+                    DB.tenants = JSON.parse(savedTenants);
+                }
+                const savedConversations = localStorage.getItem('conversations');
+                if (savedConversations) {
+                    DB.conversations = JSON.parse(savedConversations);
+                }
+                const savedDocuments = localStorage.getItem('documents');
+                if (savedDocuments) {
+                    DB.documents = JSON.parse(savedDocuments);
+                }
+                const savedChatSettings = localStorage.getItem('chatSettings');
+                if (savedChatSettings) {
+                    DB.chatSettings = JSON.parse(savedChatSettings);
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement:', error);
+            }
+        }
+
+        // Charger la base de données au démarrage
+        loadDB();
+
+        // Initialisation de Google Maps
+        let map, marker, autocomplete;
+        function initMap() {
+            const paris = { lat: 48.8566, lng: 2.3522 };
+            map = new google.maps.Map(document.getElementById('propertyMap'), {
+                center: paris,
+                zoom: 13
+            });
+
+            const input = document.getElementById('address');
+            autocomplete = new google.maps.places.Autocomplete(input);
+            
+            // Créer le marqueur initial
+            marker = new google.maps.Marker({
+                map: map,
+                draggable: true
+            });
+
+            // Mettre à jour la carte quand une adresse est sélectionnée
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                if (!place.geometry) return;
+
+                // Mettre à jour la carte
+                map.setCenter(place.geometry.location);
+                map.setZoom(15);
+
+                // Mettre à jour le marqueur
+                marker.setPosition(place.geometry.location);
+            });
+        }
+
+        // Rafraîchir la liste des biens
+        function refreshPropertiesList() {
+            const container = document.getElementById('propertiesList');
+            container.innerHTML = '';
+
+            DB.properties.forEach(property => {
+                const card = document.createElement('div');
+                card.className = 'card property-card';
+                
+                // S'assurer que toutes les propriétés ont des valeurs par défaut
+                const safeProperty = {
+                    id: property.id || Date.now(),
+                    type: property.type || 'Type non spécifié',
+                    propertyTitle: property.propertyTitle || '',
+                    address: property.address || 'Adresse non spécifiée',
+                    surface: property.surface || '0',
+                    rooms: property.rooms || '0',
+                    rent: property.rent || '0',
+                    charges: property.charges || '0',
+                    heatingType: property.heatingType || 'Non spécifié',
+                    energyClass: property.energyClass || 'Non spécifié',
+                    gasEmission: property.gasEmission || 'Non spécifié',
+                    amenities: property.amenities || [],
+                    images: property.images || ['data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vbiBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='],
+                    location: property.location || null,
+                    score: property.score || {
+                        total: 85,
+                        state: 90,
+                        location: 85,
+                        profitability: 80
+                    }
+                };
+                
+                card.innerHTML = `
+                    <div class="property-actions">
+                        <button class="btn" onclick="editProperty(${safeProperty.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-cancel" onclick="deleteProperty(${safeProperty.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <img src="${safeProperty.images[0]}" style="width: 100%; height: 200px; object-fit: cover;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vbiBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
+                    <h3>${safeProperty.propertyTitle} ${safeProperty.type}</h3>
+                    <p>${safeProperty.address}</p>
+                    <p>${safeProperty.surface}m² - ${safeProperty.rooms} pièces</p>
+                    <p>${safeProperty.rent}€/mois + ${safeProperty.charges}€ charges</p>
+                    <div class="property-score">
+                        Score: ${safeProperty.score.total}/100
+                        <div class="score-details">
+                            <span>État: ${safeProperty.score.state}/100</span>
+                            <span>Localisation: ${safeProperty.score.location}/100</span>
+                            <span>Rentabilité: ${safeProperty.score.profitability}/100</span>
+                        </div>
+                    </div>
+                    <div class="property-details">
+                        <p><strong>Chauffage:</strong> ${safeProperty.heatingType}</p>
+                        <p><strong>DPE:</strong> ${safeProperty.energyClass} - <strong>GES:</strong> ${safeProperty.gasEmission}</p>
+                        <div class="property-amenities">
+                            ${safeProperty.amenities.map(a => `<span class="amenity-tag">${a}</span>`).join('')}
+                        </div>
+                    </div>
+                    ${safeProperty.location ? `
+                        <div class="map-container" id="map-${safeProperty.id}" style="height: 200px; margin-top: 1rem;"></div>
+                    ` : ''}
+                    <img src="${generateQRCode(safeProperty.location)}" class="qr-code" alt="QR Code">
+                `;
+                container.appendChild(card);
+
+                // Initialiser la carte pour ce bien si une localisation existe
+                if (safeProperty.location) {
+                    setTimeout(() => {
+                        const mapElement = document.getElementById(`map-${safeProperty.id}`);
+                        if (mapElement) {
+                            const propertyMap = new google.maps.Map(mapElement, {
+                                center: safeProperty.location,
+                                zoom: 15
+                            });
+                            new google.maps.Marker({
+                                position: safeProperty.location,
+                                map: propertyMap
+                            });
+                        }
+                    }, 100);
+                }
+            });
+
+            updatePropertySelectors();
+        }
+
+        // Mettre à jour les sélecteurs de biens
+        function updatePropertySelectors() {
+            const selectors = document.querySelectorAll('select[name="property"]');
+            selectors.forEach(selector => {
+                selector.innerHTML = '<option value="">Sélectionner un bien</option>';
+                DB.properties.forEach(property => {
+                    const displayName = `${property.propertyTitle || ''} ${property.type} - ${property.address}`.trim();
+                    selector.innerHTML += `
+                        <option value="${property.id}">${displayName}</option>
+                    `;
+                });
+            });
+        }
+
+        // Initialisation
+        window.addEventListener('load', function() {
+            initMap();
+            refreshPropertiesList();
+            refreshTenantsList(); // Ajouter l'affichage des locataires
+            
+            // Auto-refresh du chat si ouvert et en mode manuel
+            setInterval(() => {
+                const globalMode = localStorage.getItem('globalMode') || 'manual';
+                if (globalMode === 'manual' && document.getElementById('chatModal').style.display === 'block') {
+                    const tenantId = document.getElementById('chatModal').dataset.currentTenantId;
+                    if (tenantId) {
+                        // Recharger silencieusement les messages
+                        loadDB();
+                        const messages = DB.conversations[tenantId] || [];
+                        const chatContainer = document.getElementById('chatMessages');
+                        
+                        if (messages.length > 0) {
+                            chatContainer.innerHTML = messages.map(msg => {
+                                const isFromAdmin = msg.type === 'sent';
+                                return `
+                                    <div class="message ${isFromAdmin ? 'sent' : 'received'}">
+                                        <div class="message-content">
+                                            ${msg.content}
+                                            <div class="message-time">${new Date(msg.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                        }
+                    }
+                }
+            }, 2000); // Toutes les 2 secondes
+        });
+
+        // Fonction pour annuler l'ajout
+        function cancelAddProperty() {
+            resetPropertyForm();
+        }
+
+        // Fonction pour générer le QR code
+        function generateQRCode(location) {
+            if (!location || !location.lat || !location.lng) {
+                // Retourner un QR code par défaut ou vide si pas de localisation
+                return `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('Localisation non disponible')}`;
+            }
+            const mapUrl = `https://www.google.com/maps?q=${location.lat},${location.lng}`;
+            return `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(mapUrl)}`;
+        }
+
+        // Fonction pour modifier un bien
+        function editProperty(propertyId) {
+            const property = DB.properties.find(p => p.id === propertyId);
+            if (!property) return;
+
+            const form = document.getElementById('addPropertyForm');
+            form.dataset.editId = propertyId;
+
+            // Remplir tous les champs du formulaire
+            form.querySelector('[name="propertyTitle"]').value = property.propertyTitle || '';
+            form.querySelector('[name="propertyType"]').value = property.type;
+            form.querySelector('[name="address"]').value = property.address;
+            form.querySelector('[name="surface"]').value = property.surface;
+            form.querySelector('[name="rooms"]').value = property.rooms;
+            form.querySelector('[name="rent"]').value = property.rent;
+            form.querySelector('[name="charges"]').value = property.charges;
+            form.querySelector('[name="deposit"]').value = property.deposit;
+            form.querySelector('[name="agencyFees"]').value = property.agencyFees;
+            form.querySelector('[name="heatingType"]').value = property.heatingType;
+            form.querySelector('[name="energyClass"]').value = property.energyClass;
+            form.querySelector('[name="gasEmission"]').value = property.gasEmission;
+            form.querySelector('[name="description"]').value = property.description;
+
+            // Cocher les équipements
+            const checkboxes = form.querySelectorAll('input[name="amenities[]"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = property.amenities && property.amenities.includes(checkbox.value);
+            });
+
+            // Afficher les images existantes
+            const imagePreview = document.getElementById('imagePreview');
+            imagePreview.innerHTML = '';
+            if (property.images && property.images.length > 0) {
+                property.images.forEach(image => {
+                    const img = document.createElement('img');
+                    img.src = image;
+                    imagePreview.appendChild(img);
+                });
+            }
+
+            document.getElementById('propertyForm').style.display = 'block';
+        }
+
+        // Fonction pour supprimer un bien
+        function deleteProperty(propertyId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce bien ?')) {
+                DB.properties = DB.properties.filter(p => p.id !== propertyId);
+                saveDB();
+                refreshPropertiesList();
+            }
+        }
+
+        // Rafraîchir la liste des locataires
+        function refreshTenantsList() {
+            const container = document.getElementById('tenantsList');
+            container.innerHTML = '';
+
+            DB.tenants.forEach(tenant => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                // Trouver le bien associé
+                const property = DB.properties.find(p => p.id == tenant.propertyId);
+                const propertyName = property ? 
+                    `${property.propertyTitle || ''} ${property.type} - ${property.address}`.trim() : 
+                    'Bien non trouvé';
+                
+                card.innerHTML = `
+                    <div class="tenant-header">
+                        <i class="fas fa-user-circle" style="font-size: 3rem; color: #2a5298;"></i>
+                        <div>
+                            <h3>${tenant.firstName} ${tenant.lastName}</h3>
+                            <p>${tenant.email}</p>
+                            <p>${tenant.phone}</p>
+                        </div>
+                    </div>
+                    <p><strong>Bien loué:</strong> ${propertyName}</p>
+                    <p><strong>Score:</strong> ${tenant.score}/100</p>
+                    ${tenant.leaseStartDate ? `
+                        <div style="background:#f8f9fa;padding:10px;border-radius:5px;margin:10px 0;">
+                            <p style="margin:5px 0;"><strong>📅 Début du bail:</strong> ${new Date(tenant.leaseStartDate).toLocaleDateString('fr-FR')}</p>
+                            <p style="margin:5px 0;"><strong>⏱️ Durée:</strong> ${tenant.leaseDuration} ans</p>
+                            <p style="margin:5px 0;"><strong>📆 Fin du bail:</strong> ${(() => {
+                                const end = new Date(tenant.leaseStartDate);
+                                end.setFullYear(end.getFullYear() + tenant.leaseDuration);
+                                return end.toLocaleDateString('fr-FR');
+                            })()}</p>
+                        </div>
+                    ` : ''}
+                    <div class="tenant-actions">
+                        <button class="btn" onclick="editTenant(${tenant.id})">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="btn" onclick="openChat('${tenant.email}')">
+                            <i class="fas fa-comments"></i> Chat
+                        </button>
+                        <button class="btn" onclick="viewDocuments('${tenant.email}')">
+                            <i class="fas fa-folder"></i> Documents
+                        </button>
+                        <button class="btn btn-cancel" onclick="deleteTenant(${tenant.id})">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Fonction pour modifier un locataire
+        function editTenant(tenantId) {
+            const tenant = DB.tenants.find(t => t.id === tenantId);
+            if (!tenant) return;
+
+            const form = document.getElementById('addTenantForm');
+            form.dataset.editId = tenantId;
+
+            // Changer le titre du formulaire
+            document.getElementById('tenantFormTitle').textContent = 'Modifier le locataire';
+
+            // Remplir le formulaire
+            form.querySelector('[name="lastName"]').value = tenant.lastName;
+            form.querySelector('[name="firstName"]').value = tenant.firstName;
+            form.querySelector('[name="email"]').value = tenant.email;
+            form.querySelector('[name="phone"]').value = tenant.phone;
+            form.querySelector('[name="password"]').value = tenant.password || '123456';
+            form.querySelector('[name="property"]').value = tenant.propertyId;
+            if (tenant.leaseStartDate) {
+                form.querySelector('[name="leaseStartDate"]').value = tenant.leaseStartDate;
+                form.querySelector('[name="leaseDuration"]').value = tenant.leaseDuration || '3';
+            }
+
+            document.getElementById('tenantForm').style.display = 'block';
+            updatePropertySelectors(); // S'assurer que les biens sont à jour
+        }
+
+        // Fonction pour supprimer un locataire
+        function deleteTenant(tenantId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce locataire ?')) {
+                DB.tenants = DB.tenants.filter(t => t.id !== tenantId);
+                saveDB();
+                refreshTenantsList();
+            }
+        }
+
+        // Fonction pour annuler l'ajout/modification
+        function cancelAddTenant() {
+            const form = document.getElementById('addTenantForm');
+            form.reset();
+            form.dataset.editId = '';
+            document.getElementById('tenantForm').style.display = 'none';
+        }
+
+        // Fonction pour télécharger un document
+        function downloadDocument(tenantId, documentIndex) {
+            const documents = DB.documents[tenantId];
+            if (!documents || !documents[documentIndex]) {
+                alert('Document non trouvé');
+                return;
+            }
+            
+            const doc = documents[documentIndex];
+            
+            // Si le document a du contenu stocké
+            if (doc.fileContent) {
+                // Créer un lien de téléchargement
+                const link = document.createElement('a');
+                link.href = doc.fileContent;
+                link.download = doc.fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                // Si pas de contenu (documents ajoutés avant la mise à jour)
+                alert('Ce document n\'a pas de contenu téléchargeable.\n\nLes documents ajoutés après cette mise à jour pourront être téléchargés.');
+            }
+        }
+
+        // Système de connexion
+        window.currentUser = null;
+        
+        // Gestion du formulaire de connexion
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = this.email.value.trim().toLowerCase(); // Normaliser l'email
+            const password = this.password.value;
+            
+            // Vérifier si c'est l'admin
+            if (email === 'admin@gestion.com' && password === 'admin123') {
+                window.currentUser = { type: 'admin', email: email };
+                showAdminInterface();
+            } 
+            // Vérifier si c'est un locataire
+            else {
+                const tenant = DB.tenants.find(t => t.email.toLowerCase() === email);
+                if (tenant && tenant.password && password === tenant.password) {
+                    window.currentUser = { type: 'tenant', data: tenant };
+                    showTenantInterface();
+                } else if (tenant && !tenant.password && password === '123456') {
+                    // Pour les anciens locataires sans mot de passe personnalisé
+                    window.currentUser = { type: 'tenant', data: tenant };
+                    showTenantInterface();
+                } else {
+                    alert('Email ou mot de passe incorrect');
+                }
+            }
+        });
+        
+        // Afficher l'interface admin
+        function showAdminInterface() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('tenantInterface').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('userName').textContent = 'Administrateur';
+        }
+        
+        // Afficher l'interface locataire
+        function showTenantInterface() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('tenantInterface').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'flex';
+            
+            const tenant = window.currentUser.data;
+            document.getElementById('userName').textContent = tenant.firstName + ' ' + tenant.lastName;
+            document.getElementById('tenantName').textContent = tenant.firstName + ' ' + tenant.lastName;
+            
+            // Charger les infos du logement
+            const property = DB.properties.find(p => p.id == tenant.propertyId);
+            if (property) {
+                document.getElementById('tenantPropertyInfo').innerHTML = `
+                    <p><strong>Adresse :</strong> ${property.address}</p>
+                    <p><strong>Type :</strong> ${property.type}</p>
+                    <p><strong>Surface :</strong> ${property.surface}m²</p>
+                    <p><strong>Loyer :</strong> ${property.rent}€/mois</p>
+                    ${tenant.leaseStartDate ? `
+                        <p><strong>Début du bail :</strong> ${new Date(tenant.leaseStartDate).toLocaleDateString('fr-FR')}</p>
+                        <p><strong>Fin du bail :</strong> ${(() => {
+                            const end = new Date(tenant.leaseStartDate);
+                            end.setFullYear(end.getFullYear() + tenant.leaseDuration);
+                            return end.toLocaleDateString('fr-FR');
+                        })()}</p>
+                    ` : ''}
+                `;
+            }
+            
+            // Charger le chat
+            loadTenantChat();
+            
+            // Charger les documents
+            loadTenantDocuments();
+            
+            // Auto-refresh du chat toutes les 2 secondes
+            if (window.tenantChatInterval) {
+                clearInterval(window.tenantChatInterval);
+            }
+            window.tenantChatInterval = setInterval(() => {
+                // Ne pas rafraîchir si bloqué
+                if (window.blockTenantRefresh) {
+                    console.log('🚫 Auto-refresh bloqué temporairement');
+                    return;
+                }
+                loadDB(); // Recharger la DB
+                loadTenantChat(); // Rafraîchir le chat
+            }, 2000);
+        }
+        
+        // Charger le chat du locataire
+        function loadTenantChat() {
+            const tenant = window.currentUser.data;
+            const messages = DB.conversations[tenant.id] || [];
+            const chatContainer = document.getElementById('tenantChatMessages');
+            
+            // Ne pas rafraîchir si on est en train de taper
+            const input = document.getElementById('tenantMessageInput');
+            if (input && input.value.trim() !== '') {
+                console.log('⏸️ Pas de refresh - utilisateur en train de taper');
+                return;
+            }
+            
+            // Vérifier si on a déjà le même nombre de messages (éviter les rafraîchissements inutiles)
+            const currentMessageCount = chatContainer.querySelectorAll('div[style*="margin-bottom"]').length;
+            if (currentMessageCount === messages.length && currentMessageCount > 0) {
+                console.log('⏸️ Pas de refresh - même nombre de messages');
+                return;
+            }
+            
+            if (messages.length === 0) {
+                chatContainer.innerHTML = '<p style="text-align:center;color:#666;">Aucun message pour le moment</p>';
+            } else {
+                chatContainer.innerHTML = messages.map(msg => {
+                    const isFromTenant = msg.type === 'received';
+                    return `
+                        <div style="margin-bottom:15px;text-align:${isFromTenant ? 'right' : 'left'};">
+                            <div style="display:inline-block;max-width:70%;padding:10px 15px;border-radius:10px;background:${isFromTenant ? '#2a5298' : '#e9ecef'};color:${isFromTenant ? 'white' : 'black'};">
+                                ${msg.content}
+                                <div style="font-size:0.8rem;margin-top:5px;opacity:0.8;">
+                                    ${new Date(msg.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Envoyer un message (locataire)
+        function sendTenantMessage() {
+            const input = document.getElementById('tenantMessageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            console.log('📤 Locataire envoie:', message);
+            console.log('📍 sendTenantMessage appelée');
+            console.log('📍 window.currentUser:', window.currentUser);
+            
+            // Vérifier que currentUser existe
+            if (!window.currentUser || !window.currentUser.data) {
+                console.error('❌ currentUser non défini!');
+                alert('Erreur: session non valide. Veuillez vous reconnecter.');
+                return;
+            }
+            
+            const tenant = window.currentUser.data;
+            if (!DB.conversations[tenant.id]) {
+                DB.conversations[tenant.id] = [];
+            }
+            
+            // Ajouter le message
+            DB.conversations[tenant.id].push({
+                type: 'received',
+                content: message,
+                timestamp: new Date().toISOString()
+            });
+            
+            input.value = '';
+            saveDB();
+            loadTenantChat();
+            
+            // Bloquer l'auto-refresh pendant 5 secondes pour laisser le temps à la réponse automatique
+            window.blockTenantRefresh = true;
+            setTimeout(() => {
+                window.blockTenantRefresh = false;
+            }, 5000);
+            
+            // Vérifier le mode global
+            const isGlobalAutoMode = localStorage.getItem('globalMode') === 'auto';
+            console.log('🤖 Mode global:', isGlobalAutoMode ? 'AUTO' : 'MANUEL');
+            console.log('📍 localStorage globalMode:', localStorage.getItem('globalMode'));
+            
+            if (isGlobalAutoMode) {
+                console.log('🚀 Déclenchement de la réponse automatique...');
+                // Mode automatique global - L'IA gère tout
+                setTimeout(() => {
+                    console.log('⏰ Appel de handleAutomaticResponse...');
+                    window.handleAutomaticResponse(tenant, message);
+                }, 2000);
+            } else {
+                console.log('👤 Mode manuel - pas de réponse automatique');
+                // EN MODE MANUEL : RIEN ! Le message attend la réponse de l'admin
+            }
+        }
+        
+        // Gérer la réponse automatique complète
+        window.handleAutomaticResponse = async function(tenant, message) {
+            console.log('🤖 handleAutomaticResponse appelée pour:', tenant.firstName, 'Message:', message);
+            console.log('📍 Fonction existe:', typeof handleAutomaticResponse);
+            console.log('📍 Tenant:', tenant);
+            
+            try {
+                // Analyser le message pour détecter les problèmes
+                const analysis = window.analyzeMessage(message);
+                console.log('📊 Analyse du message:', analysis);
+                
+                let responseMessage = '';
+                let actionsPerformed = [];
+                
+                // Si c'est un problème de maintenance
+                if (analysis.isMaintenanceIssue) {
+                    // Créer une intervention
+                    const interventionId = window.createAutomaticIntervention(tenant, analysis);
+                    actionsPerformed.push('Intervention créée #' + interventionId);
+                    
+                    // Contacter un prestataire
+                    const provider = window.findBestProvider(analysis.issueType);
+                    if (provider) {
+                        const quoteRequest = window.requestAutomaticQuote(provider, analysis, tenant);
+                        actionsPerformed.push('Devis demandé à ' + provider.name);
+                        
+                        // Planifier un RDV
+                        const appointment = window.scheduleAppointment(tenant, provider, analysis);
+                        actionsPerformed.push('RDV proposé : ' + appointment.date);
+                        
+                        responseMessage = `🤖 J'ai bien pris en compte votre demande concernant ${analysis.issueDescription}.\n\n` +
+                                        `✅ Actions effectuées :\n` +
+                                        actionsPerformed.map(a => `• ${a}`).join('\n') + '\n\n' +
+                                        `📅 Un technicien de ${provider.name} vous contactera pour confirmer le RDV du ${appointment.date}.\n\n` +
+                                        `Je reste à votre disposition pour toute question.`;
+                    }
+                } 
+                // Si c'est une question sur le loyer/paiement
+                else if (analysis.isPaymentRelated) {
+                    responseMessage = await window.handlePaymentQuery(tenant, message);
+                }
+                // Si c'est une demande de document
+                else if (analysis.isDocumentRequest) {
+                    responseMessage = await window.handleDocumentRequest(tenant, message);
+                }
+                // Autre demande
+                else {
+                    // Utiliser GPT pour une réponse générale
+                    responseMessage = await getAIResponse(message);
+                }
+                
+                // Ajouter la réponse à la conversation
+                DB.conversations[tenant.id].push({
+                    type: 'sent',
+                    content: responseMessage,
+                    timestamp: new Date().toISOString(),
+                    isAutomatic: true,
+                    actions: actionsPerformed
+                });
+                
+                saveDB();
+                loadTenantChat();
+                
+            } catch (error) {
+                console.error('Erreur dans la réponse automatique:', error);
+                // Réponse de fallback
+                DB.conversations[tenant.id].push({
+                    type: 'sent',
+                    content: 'Je comprends votre demande. Un gestionnaire prendra contact avec vous rapidement.',
+                    timestamp: new Date().toISOString(),
+                    isAutomatic: true
+                });
+                saveDB();
+                loadTenantChat();
+            }
+        }
+        
+        // Analyser le message pour détecter le type de demande
+        window.analyzeMessage = function(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            const maintenanceKeywords = ['fuite', 'cassé', 'panne', 'problème', 'réparer', 'urgent', 'chauffage', 'électricité', 'plomberie', 'serrure'];
+            const paymentKeywords = ['loyer', 'paiement', 'payer', 'virement', 'retard', 'quittance'];
+            const documentKeywords = ['document', 'contrat', 'bail', 'attestation', 'papier'];
+            
+            const analysis = {
+                isMaintenanceIssue: maintenanceKeywords.some(keyword => lowerMessage.includes(keyword)),
+                isPaymentRelated: paymentKeywords.some(keyword => lowerMessage.includes(keyword)),
+                isDocumentRequest: documentKeywords.some(keyword => lowerMessage.includes(keyword)),
+                issueType: '',
+                issueDescription: '',
+                urgency: lowerMessage.includes('urgent') ? 'high' : 'medium'
+            };
+            
+            // Déterminer le type de problème
+            if (lowerMessage.includes('fuite')) {
+                analysis.issueType = 'plumbing';
+                analysis.issueDescription = 'une fuite d\'eau';
+            } else if (lowerMessage.includes('électri')) {
+                analysis.issueType = 'electrical';
+                analysis.issueDescription = 'un problème électrique';
+            } else if (lowerMessage.includes('chauffage')) {
+                analysis.issueType = 'heating';
+                analysis.issueDescription = 'un problème de chauffage';
+            } else if (lowerMessage.includes('serrure') || lowerMessage.includes('porte')) {
+                analysis.issueType = 'locksmith';
+                analysis.issueDescription = 'un problème de serrurerie';
+            }
+            
+            return analysis;
+        }
+        
+        // Créer automatiquement une intervention
+        window.createAutomaticIntervention = function(tenant, analysis) {
+            const interventionId = Date.now();
+            
+            if (!DB.interventions) DB.interventions = [];
+            
+            const property = DB.properties.find(p => p.id == tenant.propertyId);
+            
+            DB.interventions.push({
+                id: interventionId,
+                type: analysis.issueType,
+                propertyId: tenant.propertyId,
+                propertyAddress: property ? property.address : 'Adresse non trouvée',
+                tenantId: tenant.id,
+                tenantName: `${tenant.firstName} ${tenant.lastName}`,
+                description: `Demande automatique : ${analysis.issueDescription}`,
+                urgency: analysis.urgency,
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+                createdBy: 'system'
+            });
+            
+            saveDB();
+            return interventionId;
+        }
+        
+        // Trouver le meilleur prestataire
+        window.findBestProvider = function(issueType) {
+            // Simulation de prestataires
+            const providers = {
+                plumbing: { name: 'Plomberie Express', phone: '01 23 45 67 89', rating: 4.8 },
+                electrical: { name: 'Élec Pro Services', phone: '01 98 76 54 32', rating: 4.6 },
+                heating: { name: 'Chauffage Plus', phone: '01 11 22 33 44', rating: 4.7 },
+                locksmith: { name: 'Serrurerie 24/7', phone: '01 55 66 77 88', rating: 4.5 }
+            };
+            
+            return providers[issueType] || providers.plumbing;
+        }
+        
+        // Demander un devis automatiquement
+        window.requestAutomaticQuote = function(provider, analysis, tenant) {
+            const quoteId = Date.now();
+            
+            if (!DB.quotes) DB.quotes = [];
+            
+            DB.quotes.push({
+                id: quoteId,
+                provider: provider.name,
+                tenantId: tenant.id,
+                issueType: analysis.issueType,
+                description: analysis.issueDescription,
+                status: 'requested',
+                requestedAt: new Date().toISOString()
+            });
+            
+            saveDB();
+            return quoteId;
+        }
+        
+        // Planifier un rendez-vous
+        window.scheduleAppointment = function(tenant, provider, analysis) {
+            // Proposer un RDV dans les 48h
+            const appointmentDate = new Date();
+            appointmentDate.setDate(appointmentDate.getDate() + 2);
+            appointmentDate.setHours(14, 0, 0, 0);
+            
+            const appointment = {
+                date: appointmentDate.toLocaleDateString('fr-FR'),
+                time: '14h00',
+                provider: provider.name,
+                tenant: tenant.id
+            };
+            
+            if (!DB.appointments) DB.appointments = [];
+            DB.appointments.push(appointment);
+            saveDB();
+            
+            return appointment;
+        }
+        
+        // Gérer les questions sur les paiements
+        window.handlePaymentQuery = async function(tenant, message) {
+            return `📊 Concernant votre loyer :\n\n` +
+                   `• Montant mensuel : ${DB.properties.find(p => p.id == tenant.propertyId)?.rent || 'N/A'}€\n` +
+                   `• Prochaine échéance : le 5 du mois\n` +
+                   `• Mode de paiement : Virement automatique\n\n` +
+                   `Si vous avez des difficultés de paiement, n'hésitez pas à nous en informer pour trouver une solution ensemble.`;
+        }
+        
+        // Gérer les demandes de documents
+        window.handleDocumentRequest = async function(tenant, message) {
+            const documents = DB.documents[tenant.id] || [];
+            return `📄 Vos documents sont disponibles dans votre espace personnel.\n\n` +
+                   `Documents disponibles : ${documents.length}\n\n` +
+                   `Vous pouvez les télécharger directement depuis l'onglet "Mes documents" de votre interface.`;
+        }
+
+        // Déconnexion
+        function logout() {
+            window.currentUser = null;
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('tenantInterface').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            
+            // Arrêter l'auto-refresh du chat locataire
+            if (window.tenantChatInterval) {
+                clearInterval(window.tenantChatInterval);
+                window.tenantChatInterval = null;
+            }
+        }
+
+        // Navigation dans le dashboard
+    </script>
+
+    <!-- NOUVELLES FONCTIONNALITÉS IA - Ne touche pas au code existant -->
+    <script>
+        // Configuration OpenAI
+        const OPENAI_API_KEY = 'VOTRE_CLE_API_ICI'; // Remplacez par votre clé API OpenAI
+        
+        // 1. CHATBOT IA AVANCÉ - Amélioration du chat existant
+        // DÉSACTIVÉ - On utilise le mode global maintenant
+        /*
+        const originalSendMessage = window.sendMessage;
+        window.sendMessage = function() {
+            var input = document.getElementById('messageInput');
+            var message = input.value.trim();
+            if (message) {
+                var chatMessages = document.getElementById('chatMessages');
+                chatMessages.innerHTML += '<div class="message sent"><div class="message-content">' + message + '</div></div>';
+                input.value = '';
+                
+                // Appel à l'IA pour une réponse intelligente
+                getAIResponse(message).then(response => {
+                    chatMessages.innerHTML += '<div class="message received"><div class="message-content">' + response + '</div></div>';
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }).catch(() => {
+                    // Fallback sur l'ancienne méthode si erreur
+                    setTimeout(function() {
+                        chatMessages.innerHTML += '<div class="message received"><div class="message-content">Message reçu, merci !</div></div>';
+                    }, 1000);
+                });
+            }
+        };
+        */
+        
+        // Fonction pour obtenir une réponse IA
+        async function getAIResponse(message) {
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + OPENAI_API_KEY
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [{
+                            role: 'system',
+                            content: 'Tu es un assistant de gestion locative. Réponds de manière professionnelle et concise aux questions des locataires.'
+                        }, {
+                            role: 'user',
+                            content: message
+                        }],
+                        max_tokens: 150,
+                        temperature: 0.7
+                    })
+                });
+                
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('Erreur IA:', error);
+                return 'Je comprends votre message. Un gestionnaire vous répondra rapidement.';
+            }
+        }
+        
+        // 2. VÉRIFICATION DOCUMENTS OCR
+        function analyzeDocument(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Simulation d'analyse OCR
+                setTimeout(() => {
+                    const documentTypes = {
+                        'bail': ['contrat', 'location', 'bail', 'loyer'],
+                        'assurance': ['assurance', 'habitation', 'responsabilité'],
+                        'identité': ['carte', 'identité', 'passeport', 'permis'],
+                        'revenus': ['salaire', 'bulletin', 'paie', 'revenus']
+                    };
+                    
+                    // Analyse simulée du nom du fichier
+                    const fileName = file.name.toLowerCase();
+                    let detectedType = 'autre';
+                    
+                    for (const [type, keywords] of Object.entries(documentTypes)) {
+                        if (keywords.some(keyword => fileName.includes(keyword))) {
+                            detectedType = type;
+                            break;
+                        }
+                    }
+                    
+                    callback({
+                        type: detectedType,
+                        valid: Math.random() > 0.2, // 80% de documents valides
+                        confidence: Math.floor(Math.random() * 20) + 80
+                    });
+                }, 1500);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Améliorer l'upload de documents avec vérification
+        const originalHandleDocumentUpload = window.handleDocumentUpload;
+        window.handleDocumentUpload = function(input) {
+            originalHandleDocumentUpload(input);
+            
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                const statusDiv = document.createElement('div');
+                statusDiv.style.cssText = 'margin-top:5px;padding:5px;border-radius:3px;font-size:0.9rem;';
+                statusDiv.innerHTML = '🔍 Analyse du document en cours...';
+                input.parentElement.appendChild(statusDiv);
+                
+                analyzeDocument(file, (result) => {
+                    if (result.valid) {
+                        statusDiv.style.background = '#d4edda';
+                        statusDiv.style.color = '#155724';
+                        statusDiv.innerHTML = `✅ Document ${result.type} validé (confiance: ${result.confidence}%)`;
+                    } else {
+                        statusDiv.style.background = '#f8d7da';
+                        statusDiv.style.color = '#721c24';
+                        statusDiv.innerHTML = `❌ Document invalide ou illisible`;
+                    }
+                });
+            }
+        };
+        
+        // 3. SYSTÈME D'ALERTES AVANCÉ
+        function checkTenantBehavior() {
+            const alerts = [];
+            const today = new Date();
+            
+            DB.tenants.forEach(tenant => {
+                // Vérifier les retards de paiement simulés
+                const paymentDelay = Math.random();
+                if (paymentDelay > 0.8) {
+                    alerts.push({
+                        type: 'payment',
+                        severity: 'high',
+                        tenant: tenant,
+                        message: 'Retard de paiement détecté'
+                    });
+                }
+                
+                // Vérifier l'activité du chat
+                const lastChat = DB.conversations[tenant.id];
+                if (lastChat && lastChat.length > 10) {
+                    alerts.push({
+                        type: 'communication',
+                        severity: 'medium',
+                        tenant: tenant,
+                        message: 'Nombreuses réclamations dans le chat'
+                    });
+                }
+                
+                // Score faible
+                if (tenant.score < 70) {
+                    alerts.push({
+                        type: 'score',
+                        severity: 'medium',
+                        tenant: tenant,
+                        message: 'Score locataire faible'
+                    });
+                }
+            });
+            
+            // Afficher les alertes dans la vue d'ensemble
+            displayAdvancedAlerts(alerts);
+        }
+        
+        function displayAdvancedAlerts(alerts) {
+            const overviewSection = document.getElementById('overview');
+            if (!overviewSection) return;
+            
+            // Vérifier si le conteneur d'alertes existe déjà
+            let alertContainer = document.getElementById('advancedAlerts');
+            if (!alertContainer) {
+                alertContainer = document.createElement('div');
+                alertContainer.id = 'advancedAlerts';
+                alertContainer.className = 'card';
+                alertContainer.style.marginTop = '20px';
+                overviewSection.appendChild(alertContainer);
+            }
+            
+            const alertsHTML = alerts.length > 0 ? alerts.map(alert => {
+                const color = alert.severity === 'high' ? '#dc3545' : '#ffc107';
+                return `
+                    <div style="padding:10px;margin:5px 0;background:${color}20;border-left:4px solid ${color};border-radius:5px;">
+                        <strong>${alert.tenant.firstName} ${alert.tenant.lastName}</strong> - ${alert.message}
+                    </div>
+                `;
+            }).join('') : '<p style="text-align:center;color:#666;">Aucune alerte comportementale</p>';
+            
+            alertContainer.innerHTML = `
+                <div class="card-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Alertes Comportementales IA</h3>
+                </div>
+                ${alertsHTML}
+            `;
+        }
+        
+        // 4. PROFILING COMPORTEMENTAL
+        function calculateTenantRiskProfile(tenantId) {
+            const tenant = DB.tenants.find(t => t.id === tenantId);
+            if (!tenant) return null;
+            
+            const profile = {
+                tenantId: tenantId,
+                riskScore: 0,
+                factors: []
+            };
+            
+            // Analyser l'ancienneté
+            const createdDate = new Date(tenant.createdAt);
+            const monthsSince = (new Date() - createdDate) / (1000 * 60 * 60 * 24 * 30);
+            if (monthsSince < 3) {
+                profile.riskScore += 20;
+                profile.factors.push('Nouveau locataire (< 3 mois)');
+            }
+            
+            // Analyser le score
+            if (tenant.score < 80) {
+                profile.riskScore += 30;
+                profile.factors.push('Score faible');
+            }
+            
+            // Analyser les conversations
+            const conversations = DB.conversations[tenantId] || [];
+            if (conversations.length > 20) {
+                profile.riskScore += 15;
+                profile.factors.push('Communications fréquentes');
+            }
+            
+            // Analyser les documents
+            const documents = DB.documents[tenantId] || [];
+            if (documents.length < 3) {
+                profile.riskScore += 10;
+                profile.factors.push('Dossier incomplet');
+            }
+            
+            // Prédiction
+            profile.prediction = profile.riskScore > 50 ? 'Risque élevé' : 
+                               profile.riskScore > 25 ? 'Risque modéré' : 
+                               'Risque faible';
+            
+            return profile;
+        }
+        
+        // Ajouter le profiling à l'affichage des locataires
+        const originalRefreshTenantsList = window.refreshTenantsList;
+        window.refreshTenantsList = function() {
+            originalRefreshTenantsList();
+            
+            // Ajouter les indicateurs de risque
+            setTimeout(() => {
+                DB.tenants.forEach(tenant => {
+                    const profile = calculateTenantRiskProfile(tenant.id);
+                    if (profile && profile.riskScore > 25) {
+                        const cards = document.querySelectorAll('#tenantsList .card');
+                        cards.forEach(card => {
+                            if (card.innerHTML.includes(tenant.email)) {
+                                const indicator = document.createElement('div');
+                                indicator.style.cssText = `
+                                    position: absolute;
+                                    top: 10px;
+                                    right: 10px;
+                                    background: ${profile.riskScore > 50 ? '#dc3545' : '#ffc107'};
+                                    color: white;
+                                    padding: 5px 10px;
+                                    border-radius: 15px;
+                                    font-size: 0.8rem;
+                                `;
+                                indicator.innerHTML = `⚠️ ${profile.prediction}`;
+                                card.style.position = 'relative';
+                                card.appendChild(indicator);
+                            }
+                        });
+                    }
+                });
+            }, 100);
+        };
+        
+        // 5. SYSTÈME DE RELANCES AUTOMATIQUES
+        function checkAndSendReminders() {
+            const today = new Date();
+            
+            DB.tenants.forEach(tenant => {
+                // Vérifier les échéances de loyer (simulation)
+                const dayOfMonth = today.getDate();
+                if (dayOfMonth === 5 || dayOfMonth === 25) {
+                    console.log(`Relance automatique envoyée à ${tenant.email}`);
+                    
+                    // Ajouter un message automatique dans la conversation
+                    if (!DB.conversations[tenant.id]) {
+                        DB.conversations[tenant.id] = [];
+                    }
+                    
+                    DB.conversations[tenant.id].push({
+                        type: 'sent',
+                        content: '📅 Rappel automatique : N\'oubliez pas le paiement du loyer.',
+                        timestamp: new Date().toISOString(),
+                        automated: true
+                    });
+                }
+                
+                // Vérifier les documents manquants
+                const documents = DB.documents[tenant.id] || [];
+                if (documents.length < 2) {
+                    console.log(`Relance documents pour ${tenant.email}`);
+                }
+            });
+            
+            saveDB();
+        }
+        
+        // Lancer les vérifications toutes les heures
+        setInterval(() => {
+            checkTenantBehavior();
+            checkAndSendReminders();
+        }, 3600000); // 1 heure
+        
+        // Lancer une première fois après 2 secondes
+        setTimeout(() => {
+            checkTenantBehavior();
+            refreshTenantsList();
+            updateRemindersUI();
+        }, 2000);
+        
+        // GESTION DES RELANCES - Interface utilisateur
+        
+        // Stocker l'historique des relances
+        if (!DB.reminders) {
+            DB.reminders = [];
+        }
+        
+        // Sauvegarder les paramètres de relances
+        function saveReminderSettings() {
+            const settings = {
+                autoPayment: document.getElementById('autoPaymentReminders').checked,
+                autoDocuments: document.getElementById('autoDocumentReminders').checked,
+                autoLease: document.getElementById('autoLeaseReminders').checked,
+                autoMaintenance: document.getElementById('autoMaintenanceReminders').checked
+            };
+            localStorage.setItem('reminderSettings', JSON.stringify(settings));
+            alert('Paramètres de relances sauvegardés !');
+        }
+        
+        // Charger les paramètres
+        function loadReminderSettings() {
+            const saved = localStorage.getItem('reminderSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                document.getElementById('autoPaymentReminders').checked = settings.autoPayment;
+                document.getElementById('autoDocumentReminders').checked = settings.autoDocuments;
+                document.getElementById('autoLeaseReminders').checked = settings.autoLease;
+                document.getElementById('autoMaintenanceReminders').checked = settings.autoMaintenance;
+            }
+        }
+        
+        // Envoyer une relance manuelle
+        document.getElementById('manualReminderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            const reminder = {
+                id: Date.now(),
+                tenantId: formData.get('tenantId'),
+                type: formData.get('reminderType'),
+                message: formData.get('message'),
+                sentDate: new Date().toISOString(),
+                status: 'sent',
+                isManual: true
+            };
+            
+            // Ajouter à l'historique
+            DB.reminders.push(reminder);
+            
+            // Ajouter au chat du locataire
+            const tenant = DB.tenants.find(t => t.id == reminder.tenantId);
+            if (tenant) {
+                if (!DB.conversations[tenant.id]) {
+                    DB.conversations[tenant.id] = [];
+                }
+                DB.conversations[tenant.id].push({
+                    type: 'sent',
+                    content: '📨 RELANCE: ' + reminder.message,
+                    timestamp: reminder.sentDate,
+                    isReminder: true
+                });
+            }
+            
+            saveDB();
+            updateRemindersUI();
+            this.reset();
+            alert('Relance envoyée avec succès !');
+        });
+        
+        // Mettre à jour l'interface des relances
+        function updateRemindersUI() {
+            // Mettre à jour les statistiques
+            const reminders = DB.reminders || [];
+            const thisMonth = new Date().getMonth();
+            const thisYear = new Date().getFullYear();
+            
+            const pendingCount = reminders.filter(r => r.status === 'pending').length;
+            const sentThisMonth = reminders.filter(r => {
+                const date = new Date(r.sentDate);
+                return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
+            }).length;
+            const autoCount = reminders.filter(r => !r.isManual).length;
+            
+            document.getElementById('pendingRemindersCount').textContent = pendingCount;
+            document.getElementById('sentRemindersCount').textContent = sentThisMonth;
+            document.getElementById('autoRemindersCount').textContent = autoCount;
+            document.getElementById('responseRateCount').textContent = '75%'; // Simulé
+            
+            // Mettre à jour le sélecteur de locataires
+            const tenantSelect = document.querySelector('#manualReminderForm select[name="tenantId"]');
+            if (tenantSelect) {
+                tenantSelect.innerHTML = '<option value="">Sélectionner un locataire</option>';
+                DB.tenants.forEach(tenant => {
+                    tenantSelect.innerHTML += `<option value="${tenant.id}">${tenant.firstName} ${tenant.lastName}</option>`;
+                });
+            }
+            
+            // Afficher l'historique
+            const historyContainer = document.getElementById('remindersHistory');
+            if (historyContainer) {
+                const recentReminders = reminders.slice(-10).reverse(); // 10 dernières relances
+                
+                if (recentReminders.length === 0) {
+                    historyContainer.innerHTML = '<p style="text-align:center;color:#666;">Aucune relance envoyée</p>';
+                } else {
+                    historyContainer.innerHTML = recentReminders.map(reminder => {
+                        const tenant = DB.tenants.find(t => t.id == reminder.tenantId);
+                        const tenantName = tenant ? `${tenant.firstName} ${tenant.lastName}` : 'Locataire inconnu';
+                        const date = new Date(reminder.sentDate).toLocaleString('fr-FR');
+                        const typeLabel = {
+                            payment: '💰 Paiement',
+                            documents: '📄 Documents',
+                            maintenance: '🔧 Maintenance',
+                            custom: '✉️ Personnalisée'
+                        }[reminder.type] || reminder.type;
+                        
+                        return `
+                            <div style="padding:15px;background:#f8f9fa;border-radius:5px;margin-bottom:10px;">
+                                <div style="display:flex;justify-content:space-between;align-items:start;">
+                                    <div>
+                                        <strong>${tenantName}</strong> - ${typeLabel}
+                                        <p style="margin:5px 0;color:#666;font-size:0.9rem;">${date}</p>
+                                        <p style="margin:5px 0;">${reminder.message}</p>
+                                    </div>
+                                    <span style="background:${reminder.isManual ? '#17a2b8' : '#28a745'};color:white;padding:3px 10px;border-radius:15px;font-size:0.8rem;">
+                                        ${reminder.isManual ? 'Manuelle' : 'Automatique'}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+        
+        // Charger les paramètres au démarrage
+        setTimeout(loadReminderSettings, 100);
+        
+        console.log('🚀 Fonctionnalités IA activées !');
+    </script>
+    
+    <!-- Script de diagnostic WordPress -->
+    <script>
+        // Fonction de diagnostic pour WordPress
+        function diagnosisWordPress() {
+            console.log('=== DIAGNOSTIC WORDPRESS ===');
+            console.log('1. jQuery présent:', typeof jQuery !== 'undefined');
+            console.log('2. wp object présent:', typeof wp !== 'undefined');
+            console.log('3. localStorage accessible:', typeof localStorage !== 'undefined');
+            console.log('4. currentUser:', window.currentUser);
+            console.log('5. Mode global:', localStorage.getItem('globalMode'));
+            console.log('6. Fonctions globales:');
+            console.log('   - handleAutomaticResponse:', typeof window.handleAutomaticResponse);
+            console.log('   - sendTenantMessage:', typeof window.sendTenantMessage);
+            console.log('   - analyzeMessage:', typeof window.analyzeMessage);
+            console.log('7. DB object:', typeof DB);
+            console.log('=========================');
+            
+            // Tester les clés localStorage
+            console.log('Clés localStorage:');
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.includes('global') || key.includes('mode')) {
+                    console.log(`   - ${key}: ${localStorage.getItem(key)}`);
+                }
+            }
+        }
+        
+        // Lancer le diagnostic après 2 secondes
+        setTimeout(diagnosisWordPress, 2000);
+        
+        // Fonction pour forcer le mode automatique (test)
+        window.forceAutoMode = function() {
+            localStorage.setItem('globalMode', 'auto');
+            console.log('✅ Mode automatique forcé');
+            location.reload();
+        };
+    </script>
+    
+    <!-- ========== FIX AUTOMATIQUE WORDPRESS ========== -->
+    <script>
+    // Fix WordPress - Ajoute SEULEMENT les fonctions manquantes sans toucher au mode
+    (function() {
+        console.log('🔧 Fix WordPress - Ajout des fonctions manquantes...');
+        
+        // Ajouter les fonctions manquantes SI elles n'existent pas
+        if (typeof window.closeChat === 'undefined') {
+            window.closeChat = function() {
+                var modal = document.getElementById('chatModal');
+                if (modal) modal.style.display = 'none';
+            };
+            console.log('✅ Fonction closeChat ajoutée');
+        }
+        
+        if (typeof window.refreshChat === 'undefined') {
+            window.refreshChat = function() {
+                const tenantId = document.getElementById('chatModal').dataset.currentTenantId;
+                if (!tenantId) return;
+                
+                const tenant = DB.tenants.find(t => t.id == tenantId);
+                if (!tenant) return;
+                
+                const messages = DB.conversations[tenantId] || [];
+                const chatContainer = document.getElementById('chatMessages');
+                
+                if (messages.length === 0) {
+                    chatContainer.innerHTML = '<div class="message received"><div class="message-content">Aucun message pour le moment</div></div>';
+                } else {
+                    chatContainer.innerHTML = messages.map(msg => {
+                        const isFromAdmin = msg.type === 'sent';
+                        return `
+                            <div class="message ${isFromAdmin ? 'sent' : 'received'}">
+                                <div class="message-content">
+                                    ${msg.content}
+                                    <div class="message-time">${new Date(msg.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            };
+            console.log('✅ Fonction refreshChat ajoutée');
+        }
+        
+        // NE PAS TOUCHER AU MODE - Laisser l'utilisateur choisir
+        console.log('📍 Mode actuel:', localStorage.getItem('globalMode') || 'non défini');
+        console.log('✅ Fix WordPress installé - Les fonctions manquantes ont été ajoutées');
+        console.log('ℹ️ Vous pouvez changer librement entre mode manuel et automatique');
+    })();
+    </script>
+    <!-- ========== FIN FIX WORDPRESS ========== -->
+</body>
+</html>

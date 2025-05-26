@@ -1,0 +1,40 @@
+appId: com.gestionlocative.pro
+productName: Gestion Locative Pro
+directories:
+  output: dist
+  buildResources: build
+
+mac:
+  category: public.app-category.business
+  icon: build/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize:
+    teamId: "7KQ5AZJD7T"  # Votre Team ID Apple
+
+dmg:
+  sign: false
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+win:
+  target: nsis
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  perMachine: true
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: true
+  
+publish:
+  provider: github
+  owner: investment99
+  repo: gestion-locative 

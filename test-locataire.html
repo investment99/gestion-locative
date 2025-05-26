@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Locataire - Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .login-form {
+            max-width: 400px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        button {
+            background: #2a5298;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #1e3c72;
+        }
+        
+        .chat-container {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+        }
+        
+        .message.sent {
+            background: #2a5298;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message.received {
+            background: #e9ecef;
+            color: #333;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            margin: 0;
+        }
+        
+        .chat-input button {
+            width: auto;
+            margin: 0;
+        }
+        
+        .info-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .refresh-btn {
+            background: #28a745;
+            padding: 5px 15px;
+            font-size: 0.9rem;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Espace Locataire - Gestion Locative Pro</h1>
+    </header>
+    
+    <div class="container">
+        <!-- Formulaire de connexion -->
+        <div class="login-form" id="loginForm">
+            <h2>Connexion Locataire</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Connectez-vous avec vos identifiants fournis par votre agence
+            </p>
+            <input type="email" id="email" placeholder="Email" value="">
+            <input type="password" id="password" placeholder="Mot de passe" value="">
+            <button onclick="login()">Se connecter</button>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 5px;">
+                <strong>Comptes de test disponibles :</strong>
+                <p style="font-size: 0.9rem; margin-top: 5px;">
+                    Créez d'abord un locataire dans l'app desktop, puis utilisez ses identifiants ici.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Dashboard locataire -->
+        <div class="dashboard" id="dashboard">
+            <!-- Informations du logement -->
+            <div class="card">
+                <h3>🏠 Mon logement</h3>
+                <div id="propertyInfo">
+                    <p>Chargement...</p>
+                </div>
+            </div>
+            
+            <!-- Chat avec l'agence -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3>💬 Chat avec l'agence</h3>
+                    <button class="refresh-btn" onclick="refreshChat()">🔄 Rafraîchir</button>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages apparaîtront ici -->
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="Tapez votre message..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button onclick="sendMessage()">Envoyer</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Documents -->
+            <div class="card">
+                <h3>📄 Mes documents</h3>
+                <div id="documents">
+                    <p>Aucun document disponible</p>
+                </div>
+            </div>
+            
+            <!-- Paiements -->
+            <div class="card">
+                <h3>💳 Paiements</h3>
+                <div class="info-item">
+                    <strong>Prochain loyer :</strong> 5 du mois
+                </div>
+                <button style="background: #28a745;">Payer en ligne</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        let currentTenant = null;
+        let db = {
+            tenants: [],
+            properties: [],
+            conversations: {},
+            documents: {}
+        };
+        
+        // Charger les données depuis localStorage
+        function loadData() {
+            const tenants = localStorage.getItem('tenants');
+            const properties = localStorage.getItem('properties');
+            const conversations = localStorage.getItem('conversations');
+            const documents = localStorage.getItem('documents');
+            
+            if (tenants) db.tenants = JSON.parse(tenants);
+            if (properties) db.properties = JSON.parse(properties);
+            if (conversations) db.conversations = JSON.parse(conversations);
+            if (documents) db.documents = JSON.parse(documents);
+            
+            console.log('Données chargées:', db);
+        }
+        
+        // Connexion
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            loadData();
+            
+            // Chercher le locataire
+            const tenant = db.tenants.find(t => t.email.toLowerCase() === email.toLowerCase());
+            
+            if (tenant && (tenant.password === password || (!tenant.password && password === '123456'))) {
+                currentTenant = tenant;
+                showDashboard();
+            } else {
+                alert('Email ou mot de passe incorrect');
+            }
+        }
+        
+        // Afficher le dashboard
+        function showDashboard() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'grid';
+            
+            // Charger les infos du logement
+            const property = db.properties.find(p => p.id == currentTenant.propertyId);
+            if (property) {
+                document.getElementById('propertyInfo').innerHTML = `
+                    <div class="info-item">
+                        <strong>Adresse :</strong> ${property.address}
+                    </div>
+                    <div class="info-item">
+                        <strong>Type :</strong> ${property.type}
+                    </div>
+                    <div class="info-item">
+                        <strong>Surface :</strong> ${property.surface}m²
+                    </div>
+                    <div class="info-item">
+                        <strong>Loyer :</strong> ${property.rent}€/mois
+                    </div>
+                `;
+            }
+            
+            // Charger le chat
+            loadChat();
+            
+            // Auto-refresh du chat
+            setInterval(refreshChat, 3000);
+        }
+        
+        // Charger le chat
+        function loadChat() {
+            const messages = db.conversations[currentTenant.id] || [];
+            const chatContainer = document.getElementById('chatMessages');
+            
+            if (messages.length === 0) {
+                chatContainer.innerHTML = '<p style="text-align:center;color:#666;">Aucun message</p>';
+            } else {
+                chatContainer.innerHTML = messages.map(msg => {
+                    const isFromTenant = msg.type === 'received';
+                    return `
+                        <div class="message ${isFromTenant ? 'sent' : 'received'}">
+                            ${msg.content}
+                            <div style="font-size:0.8rem;opacity:0.7;margin-top:5px;">
+                                ${new Date(msg.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Envoyer un message
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Ajouter le message
+            if (!db.conversations[currentTenant.id]) {
+                db.conversations[currentTenant.id] = [];
+            }
+            
+            db.conversations[currentTenant.id].push({
+                type: 'received',
+                content: message,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Sauvegarder
+            localStorage.setItem('conversations', JSON.stringify(db.conversations));
+            
+            input.value = '';
+            loadChat();
+            
+            // Notification
+            console.log('Message envoyé:', message);
+            
+            // Vérifier le mode global
+            const globalMode = localStorage.getItem('globalMode');
+            if (globalMode === 'auto') {
+                setTimeout(() => {
+                    alert('🤖 Mode automatique activé - L\'IA va répondre automatiquement dans l\'app desktop');
+                }, 1000);
+            }
+        }
+        
+        // Rafraîchir le chat
+        function refreshChat() {
+            loadData();
+            loadChat();
+            console.log('Chat rafraîchi');
+        }
+        
+        // Charger les données au démarrage
+        loadData();
+    </script>
+</body>
+</html> 

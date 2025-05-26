@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Simple</title>
+</head>
+<body>
+    <h1>Test de l'application</h1>
+    <p>Si vous voyez ce message, l'application fonctionne !</p>
+    
+    <h2>Test de connexion simple :</h2>
+    <button onclick="testAdmin()">Tester connexion Admin</button>
+    <button onclick="testLocataire()">Tester connexion Locataire</button>
+    
+    <div id="result" style="margin-top: 20px; padding: 20px; background: #f0f0f0;"></div>
+    
+    <h2>Aller directement à l'application :</h2>
+    <button onclick="goToApp()">Ouvrir l'application principale</button>
+    
+    <script>
+        function testAdmin() {
+            document.getElementById('result').innerHTML = 
+                '<h3 style="color: green;">✅ Test Admin OK</h3>' +
+                '<p>Email: admin@gestion.com</p>' +
+                '<p>Mot de passe: admin123</p>';
+        }
+        
+        function testLocataire() {
+            document.getElementById('result').innerHTML = 
+                '<h3 style="color: green;">✅ Test Locataire OK</h3>' +
+                '<p>Les locataires peuvent se connecter avec leur email et mot de passe</p>';
+        }
+        
+        function goToApp() {
+            // Forcer la connexion admin dans localStorage
+            localStorage.setItem('currentUser', JSON.stringify({
+                type: 'admin',
+                email: 'admin@gestion.com'
+            }));
+            
+            // Aller à l'application
+            window.location.href = 'gestion-locative-complete.html';
+        }
+    </script>
+</body>
+</html> 

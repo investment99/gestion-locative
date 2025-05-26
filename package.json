@@ -1,0 +1,59 @@
+{
+  "name": "gestion-locative-pro",
+  "version": "1.0.0",
+  "description": "Application de gestion locative avec intelligence artificielle pour agences immobilières",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build-mac": "electron-builder --mac",
+    "build-win": "electron-builder --win",
+    "build-all": "electron-builder -mw",
+    "dist": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/investment99/gestion-locative.git"
+  },
+  "keywords": [
+    "immobilier",
+    "gestion",
+    "locative",
+    "agence",
+    "AI"
+  ],
+  "author": "Votre Nom",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/investment99/gestion-locative/issues"
+  },
+  "homepage": "https://github.com/investment99/gestion-locative#readme",
+  "devDependencies": {
+    "@electron/notarize": "^2.5.0",
+    "electron": "^33.3.1",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.gestionlocative.pro",
+    "productName": "Gestion Locative Pro",
+    "afterSign": "notarize.js",
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "icon.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8"
+  }
+}

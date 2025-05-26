@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion Directe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+        .admin { background: #2a5298; }
+        .tenant { background: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Connexion Rapide</h1>
+        <p>Cliquez pour vous connecter directement :</p>
+        
+        <button class="admin" onclick="connectAdmin()">
+            👨‍💼 Connexion ADMIN
+        </button>
+        
+        <button class="tenant" onclick="connectTenant()">
+            🏠 Connexion LOCATAIRE
+        </button>
+    </div>
+
+    <script>
+        function connectAdmin() {
+            // Forcer la connexion admin
+            localStorage.setItem('currentUser', JSON.stringify({
+                type: 'admin',
+                email: 'admin@gestion.com',
+                name: 'Administrateur'
+            }));
+            localStorage.setItem('isLoggedIn', 'true');
+            
+            // Aller directement au dashboard
+            window.location.href = 'gestion-locative-complete.html#dashboard';
+        }
+        
+        function connectTenant() {
+            // Forcer la connexion locataire
+            localStorage.setItem('currentUser', JSON.stringify({
+                type: 'tenant',
+                email: 'marie.dupont@email.com',
+                name: 'Marie Dupont',
+                id: 1
+            }));
+            localStorage.setItem('isLoggedIn', 'true');
+            
+            // Aller directement au dashboard
+            window.location.href = 'gestion-locative-complete.html#tenant-dashboard';
+        }
+    </script>
+</body>
+</html> 

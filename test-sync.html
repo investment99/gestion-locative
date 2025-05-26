@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Synchronisation</title>
+</head>
+<body>
+    <h1>Test de synchronisation</h1>
+    <button onclick="checkData()">Vérifier les données</button>
+    <button onclick="clearData()">Effacer tout</button>
+    <pre id="output"></pre>
+    
+    <script>
+        function checkData() {
+            const data = {
+                conversations: JSON.parse(localStorage.getItem('conversations') || '{}'),
+                tenants: JSON.parse(localStorage.getItem('tenants') || '[]'),
+                globalMode: localStorage.getItem('globalMode')
+            };
+            document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+        }
+        
+        function clearData() {
+            if (confirm('Effacer toutes les données ?')) {
+                localStorage.clear();
+                alert('Données effacées. Redémarrez l\'app desktop.');
+            }
+        }
+    </script>
+</body>
+</html> 

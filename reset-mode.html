@@ -1,0 +1,18 @@
+<!-- Ajoutez ce code dans votre page WordPress pour avoir un bouton de reset -->
+<button onclick="resetMode()" style="background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+    🔄 Réinitialiser le mode
+</button>
+
+<script>
+function resetMode() {
+    // Supprimer toutes les données de mode
+    localStorage.removeItem('globalMode');
+    localStorage.removeItem('gestionLocativeInitialized');
+    
+    // Confirmer
+    alert('Mode réinitialisé ! La page va se recharger.');
+    
+    // Recharger
+    location.reload();
+}
+</script> 

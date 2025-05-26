@@ -1,0 +1,49 @@
+<!-- 
+INSTRUCTIONS WORDPRESS :
+1. Copiez TOUT ce code
+2. Collez-le dans votre page WordPress
+3. C'est tout ! Le mode automatique sera activé automatiquement
+-->
+
+<!-- Votre code HTML existant ici -->
+<!-- ... -->
+
+<!-- AJOUTEZ CE FIX À LA FIN -->
+<script>
+// FIX AUTOMATIQUE WORDPRESS
+(function() {
+    console.log('🔧 Fix WordPress en cours...');
+    
+    // Attendre que la page soit chargée
+    var checkInterval = setInterval(function() {
+        // Vérifier si localStorage est disponible
+        if (typeof localStorage !== 'undefined') {
+            // Forcer le mode automatique
+            localStorage.setItem('globalMode', 'auto');
+            console.log('✅ Mode automatique forcé avec succès !');
+            
+            // Arrêter la vérification
+            clearInterval(checkInterval);
+            
+            // Recharger si nécessaire
+            var needReload = false;
+            var modeDisplay = document.getElementById('autoModeDesc');
+            if (modeDisplay && modeDisplay.style.display === 'none') {
+                needReload = true;
+            }
+            
+            if (needReload) {
+                console.log('🔄 Rechargement de la page...');
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            }
+        }
+    }, 1000); // Vérifier toutes les secondes
+    
+    // Arrêter après 10 secondes si rien ne se passe
+    setTimeout(function() {
+        clearInterval(checkInterval);
+    }, 10000);
+})();
+</script> 

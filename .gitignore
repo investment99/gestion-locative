@@ -1,0 +1,69 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.backup
+*.bak
+
+# Fichiers de build
+dist/
+build/
+out/
+
+# Fichiers de test
+*.test.js
+test-*.html
+test-*.js
+
+# Fichiers volumineux
+*.zip
+*.rar
+*.tar.gz
+
+# Sauvegardes
+backup/
+backups/
+*.backup.html
+*.backup.js
+
+# Fichiers générés
+clean-restore.js
+fix-*.js
+activer-*.js
+verifier-*.js
+
+# Fichiers sensibles
+.env
+.env.local
+config.local.js
+
+# Electron
+electron-builder.yml
+dist_electron/
+
+# Fichiers de développement temporaires
+connexion-directe.html
+simple-test.html
+forcer-connexion.js
+
+# Distribution files
+dist/ 

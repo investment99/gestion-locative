@@ -1,0 +1,61 @@
+<!-- COPIEZ CE CODE ET COLLEZ-LE À LA FIN DE VOTRE PAGE WORDPRESS -->
+<!-- Juste avant la balise </body> -->
+
+<script>
+// FIX WORDPRESS - Charger les fonctions manquantes
+setTimeout(function() {
+    // Charger le patch depuis GitHub ou un CDN
+    var script = document.createElement('script');
+    script.src = 'https://raw.githubusercontent.com/votre-compte/votre-repo/main/wordpress-patch.js';
+    script.onerror = function() {
+        // Si le chargement échoue, injecter directement les fonctions essentielles
+        
+        // Fermer le chat
+        window.closeChat = function() {
+            var modal = document.getElementById('chatModal');
+            if (modal) modal.style.display = 'none';
+        };
+        
+        // Rafraîchir le chat
+        window.refreshChat = function() {
+            console.log('Refresh chat appelé');
+            // Le code de refresh ici
+        };
+        
+        // Définir le mode global
+        window.setGlobalMode = function(mode) {
+            localStorage.setItem('globalMode', mode);
+            console.log('Mode ' + mode + ' activé');
+            
+            var manualDesc = document.getElementById('manualModeDesc');
+            var autoDesc = document.getElementById('autoModeDesc');
+            var notifications = document.getElementById('realtimeNotifications');
+            
+            if (manualDesc) manualDesc.style.display = mode === 'manual' ? 'block' : 'none';
+            if (autoDesc) autoDesc.style.display = mode === 'auto' ? 'block' : 'none';
+            if (notifications) notifications.style.display = mode === 'manual' ? 'block' : 'none';
+        };
+        
+        console.log('✅ Fonctions de base chargées');
+    };
+    document.head.appendChild(script);
+}, 2000); // Attendre 2 secondes que la page soit chargée
+</script>
+
+<!-- OPTION PLUS SIMPLE : Forcer le mode automatique directement -->
+<script>
+// Forcer le mode automatique au chargement
+window.addEventListener('load', function() {
+    // Attendre que tout soit chargé
+    setTimeout(function() {
+        // Vérifier si on peut activer le mode auto
+        if (localStorage) {
+            var currentMode = localStorage.getItem('globalMode');
+            console.log('Mode actuel:', currentMode);
+            
+            // Si vous voulez TOUJOURS le mode automatique, décommentez cette ligne :
+            // localStorage.setItem('globalMode', 'auto');
+        }
+    }, 3000);
+});
+</script> 

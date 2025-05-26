@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test WordPress</title>
+</head>
+<body>
+    <h1>Test des fonctions WordPress</h1>
+    
+    <button onclick="testFunctions()" style="padding: 20px; font-size: 18px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        🔍 Cliquez ici pour tester
+    </button>
+    
+    <div id="results" style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 5px; font-family: monospace; white-space: pre-wrap;"></div>
+    
+    <script>
+        function testFunctions() {
+            const results = document.getElementById('results');
+            let output = '=== TEST DES FONCTIONS ===\n\n';
+            
+            // Test localStorage
+            try {
+                localStorage.setItem('test', 'ok');
+                localStorage.removeItem('test');
+                output += '✅ localStorage fonctionne\n';
+            } catch(e) {
+                output += '❌ Problème localStorage: ' + e + '\n';
+            }
+            
+            // Test mode global
+            const globalMode = localStorage.getItem('globalMode');
+            output += '\n📍 Mode global actuel: ' + (globalMode || 'non défini') + '\n';
+            
+            // Test fonctions
+            const functions = [
+                'handleAutomaticResponse',
+                'sendTenantMessage', 
+                'analyzeMessage',
+                'createAutomaticIntervention',
+                'findBestProvider',
+                'closeChat',
+                'refreshChat',
+                'setGlobalMode'
+            ];
+            
+            output += '\n🔍 Vérification des fonctions:\n';
+            functions.forEach(func => {
+                if (typeof window[func] === 'function') {
+                    output += '✅ ' + func + ' existe\n';
+                } else {
+                    output += '❌ ' + func + ' MANQUANTE\n';
+                }
+            });
+            
+            // Test DB
+            output += '\n📊 Base de données:\n';
+            if (typeof DB !== 'undefined') {
+                output += '✅ DB existe\n';
+                output += '  - Properties: ' + (DB.properties ? DB.properties.length : 0) + '\n';
+                output += '  - Tenants: ' + (DB.tenants ? DB.tenants.length : 0) + '\n';
+            } else {
+                output += '❌ DB non trouvée\n';
+            }
+            
+            results.textContent = output;
+            
+            // Aussi afficher dans la console
+            console.log(output);
+        }
+        
+        // Fonction pour forcer le mode auto
+        function forceAuto() {
+            localStorage.setItem('globalMode', 'auto');
+            alert('Mode automatique activé ! Rechargez la page.');
+        }
+    </script>
+    
+    <br><br>
+    
+    <button onclick="forceAuto()" style="padding: 15px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        🤖 Forcer le mode automatique
+    </button>
+    
+    <br><br>
+    
+    <button onclick="localStorage.clear(); alert('Cache vidé !')" style="padding: 15px; font-size: 16px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        🗑️ Vider le cache
+    </button>
+</body>
+</html> 

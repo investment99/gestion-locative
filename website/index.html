@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Locative Pro - Téléchargement</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 60px 40px;
+        }
+
+        .screenshot {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .screenshot img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .download-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .download-section h2 {
+            font-size: 2rem;
+            color: #1e3c72;
+            margin-bottom: 30px;
+        }
+
+        .features {
+            list-style: none;
+            margin-bottom: 40px;
+        }
+
+        .features li {
+            padding: 15px 0;
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .features li i {
+            color: #4CAF50;
+            margin-right: 15px;
+            font-size: 1.3rem;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .download-btn i {
+            font-size: 1.5rem;
+        }
+
+        .system-req {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+
+        .system-req h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .system-req p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .badges {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: #f0f4f8;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .badge i {
+            color: #2a5298;
+        }
+
+        .pdf-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 15px;
+            transition: color 0.3s;
+        }
+
+        .pdf-link:hover {
+            color: #1e3c72;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1.1rem;
+            }
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+        }
+
+        .footer a {
+            color: #2a5298;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gestion Locative Pro</h1>
+            <p>L'application tout-en-un pour la gestion immobilière moderne avec intelligence artificielle intégrée</p>
+        </div>
+
+        <div class="content">
+            <div class="screenshot">
+                <img src="screenshot-app.png" alt="Capture d'écran de Gestion Locative Pro">
+            </div>
+
+            <div class="download-section">
+                <h2>Prêt à révolutionner votre gestion locative ?</h2>
+                
+                <ul class="features">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Gestion complète des biens et locataires
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Chat intelligent avec IA intégrée
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Mode automatique pour gagner du temps
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Rappels et relances automatisés
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Interface moderne et intuitive
+                    </li>
+                </ul>
+
+                <a href="dist/Gestion Locative Pro-1.0.0-arm64.dmg" class="download-btn" download>
+                    <i class="fab fa-apple"></i>
+                    Télécharger pour Mac
+                </a>
+
+                <a href="guide-demarrage-rapide.pdf" class="pdf-link">
+                    <i class="fas fa-file-pdf"></i>
+                    Guide de démarrage rapide (PDF)
+                </a>
+
+                <div class="badges">
+                    <div class="badge">
+                        <i class="fas fa-shield-alt"></i>
+                        Certifié Apple
+                    </div>
+                    <div class="badge">
+                        <i class="fas fa-lock"></i>
+                        100% Sécurisé
+                    </div>
+                    <div class="badge">
+                        <i class="fas fa-rocket"></i>
+                        Installation rapide
+                    </div>
+                </div>
+
+                <div class="system-req">
+                    <h3>Configuration requise</h3>
+                    <p>
+                        • macOS 10.13 ou plus récent<br>
+                        • Processeur Intel ou Apple Silicon (M1/M2/M3)<br>
+                        • 4 GB de RAM minimum<br>
+                        • 200 MB d'espace disque
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 Gestion Locative Pro. Tous droits réservés.</p>
+            <p style="margin-top: 10px;">
+                <a href="mailto:support@gestionlocativepro.com">Support</a> • 
+                <a href="#">Conditions d'utilisation</a> • 
+                <a href="#">Confidentialité</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html> 

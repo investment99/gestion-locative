@@ -1,0 +1,66 @@
+IDENTIFIANTS DE CONNEXION - GESTION LOCATIVE INTELLIGENTE
+=================================================
+
+COMPTE ADMINISTRATEUR
+-------------------
+Identifiant: admin
+Mot de passe: dan
+
+COMPTES CLIENTS
+-------------
+client1 / client1pass
+client2 / client2pass
+client3 / client3pass
+client4 / client4pass
+client5 / client5pass
+client6 / client6pass
+client7 / client7pass
+client8 / client8pass
+client9 / client9pass
+client10 / client10pass
+client11 / client11pass
+client12 / client12pass
+client13 / client13pass
+client14 / client14pass
+client15 / client15pass
+client16 / client16pass
+client17 / client17pass
+client18 / client18pass
+client19 / client19pass
+client20 / client20pass
+client21 / client21pass
+client22 / client22pass
+client23 / client23pass
+client24 / client24pass
+client25 / client25pass
+client26 / client26pass
+client27 / client27pass
+client28 / client28pass
+client29 / client29pass
+client30 / client30pass
+client31 / client31pass
+client32 / client32pass
+client33 / client33pass
+client34 / client34pass
+client35 / client35pass
+client36 / client36pass
+client37 / client37pass
+client38 / client38pass
+client39 / client39pass
+client40 / client40pass
+client41 / client41pass
+client42 / client42pass
+client43 / client43pass
+client44 / client44pass
+client45 / client45pass
+client46 / client46pass
+client47 / client47pass
+client48 / client48pass
+client49 / client49pass
+client50 / client50pass
+
+INSTRUCTIONS
+-----------
+1. Ces identifiants sont personnels et ne doivent pas être partagés
+2. Il est recommandé de changer le mot de passe lors de la première connexion
+3. En cas de problème de connexion, contactez l'administrateur 
